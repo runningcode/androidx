@@ -18,6 +18,7 @@ package androidx.compose.compiler.plugins.kotlin
 
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.junit.Assert.assertEquals
+import org.junit.Assume.assumeFalse
 import org.junit.Test
 
 class CodegenMetadataTests(useFir: Boolean) : AbstractLoweringTests(useFir) {
