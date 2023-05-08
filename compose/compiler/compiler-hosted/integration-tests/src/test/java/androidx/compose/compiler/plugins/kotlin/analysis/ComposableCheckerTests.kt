@@ -231,7 +231,6 @@ class ComposableCheckerTests(useFir: Boolean) : AbstractComposeDiagnosticsTest(u
         """)
     }
 
-
     @Test
     fun testGenericComposableInference4() {
         assumeTrue(useFir)

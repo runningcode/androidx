@@ -2031,7 +2031,10 @@ class ComposableFunctionBodyTransformer(
 
             val name = declaration.kotlinFqName
             val file = declaration.file.name
-            val line = declaration.file.fileEntry.getLineNumber(declaration.startOffset)
+            // FIXME: This should probably use `declaration.startOffset`, but the K2 implementation
+            //        is unfinished (i.e., in K2 the start offset of an annotated function could
+            //        point at the annotation instead of the start of the function).
+            val line = declaration.file.fileEntry.getLineNumber(startOffset)
             val traceInfo = "$name ($file:$line)" // TODO(174715171) decide on what to log
             val dirty = scope.dirty
             val changed = scope.changedParameter
