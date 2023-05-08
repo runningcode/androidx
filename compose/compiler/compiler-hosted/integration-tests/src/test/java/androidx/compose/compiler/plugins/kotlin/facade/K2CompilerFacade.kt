@@ -19,10 +19,9 @@ package androidx.compose.compiler.plugins.kotlin.facade
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFileManager
-import com.intellij.psi.PsiElementFinder
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.ProjectScope
-import org.jetbrains.kotlin.asJava.finder.JavaElementFinder
+import java.util.concurrent.ConcurrentHashMap
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.jvm.JvmGeneratorExtensions
 import org.jetbrains.kotlin.backend.jvm.JvmIrCodegenFactory
@@ -41,20 +40,22 @@ import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
+import org.jetbrains.kotlin.config.languageVersionSettings
+import org.jetbrains.kotlin.constant.ConstantValue
+import org.jetbrains.kotlin.constant.EvaluatedConstTracker
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporterFactory
 import org.jetbrains.kotlin.diagnostics.impl.BaseDiagnosticsCollector
 import org.jetbrains.kotlin.fir.FirSession
-import org.jetbrains.kotlin.fir.backend.Fir2IrResult
+import org.jetbrains.kotlin.fir.backend.Fir2IrConfiguration
 import org.jetbrains.kotlin.fir.backend.jvm.FirJvmBackendClassResolver
 import org.jetbrains.kotlin.fir.backend.jvm.FirJvmBackendExtension
 import org.jetbrains.kotlin.fir.backend.jvm.JvmFir2IrExtensions
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
+import org.jetbrains.kotlin.fir.pipeline.Fir2IrActualizedResult
 import org.jetbrains.kotlin.fir.pipeline.FirResult
 import org.jetbrains.kotlin.fir.pipeline.ModuleCompilerAnalyzedOutput
-import org.jetbrains.kotlin.fir.pipeline.buildFirFromKtFiles
-import org.jetbrains.kotlin.fir.pipeline.convertToIrAndActualize
-import org.jetbrains.kotlin.fir.pipeline.runCheckers
-import org.jetbrains.kotlin.fir.pipeline.runResolution
+import org.jetbrains.kotlin.fir.pipeline.buildResolveAndCheckFir
+import org.jetbrains.kotlin.fir.pipeline.convertToIrAndActualizeForJvm
 import org.jetbrains.kotlin.fir.session.FirSessionFactoryHelper
 import org.jetbrains.kotlin.ir.backend.jvm.serialization.JvmIrMangler
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
@@ -76,17 +77,11 @@ class FirAnalysisResult(
 }
 
 private class FirFrontendResult(
-    val session: FirSession,
-    val firResult: Fir2IrResult,
+    val firResult: Fir2IrActualizedResult,
     val generatorExtensions: JvmGeneratorExtensions,
 )
 
 class K2CompilerFacade(environment: KotlinCoreEnvironment) : KotlinCompilerFacade(environment) {
-    init {
-        PsiElementFinder.EP.getPoint(environment.project)
-            .unregisterExtension(JavaElementFinder::class.java)
-    }
-
     private val project: Project
         get() = environment.project
 
@@ -104,14 +99,8 @@ class K2CompilerFacade(environment: KotlinCoreEnvironment) : KotlinCompilerFacad
             getPackagePartProvider = environment::createPackagePartProvider
         )
         val reporter = DiagnosticReporterFactory.createReporter()
-        val firFiles = session.buildFirFromKtFiles(ktFiles)
-        val scopeSession = session.runResolution(firFiles).first
-        session.runCheckers(scopeSession, firFiles, reporter)
-        return FirAnalysisResult(
-            ModuleCompilerAnalyzedOutput(session, scopeSession, firFiles),
-            ktFiles,
-            reporter
-        )
+        val analysis = buildResolveAndCheckFir(session, ktFiles, reporter)
+        return FirAnalysisResult(analysis, ktFiles, reporter)
     }
 
     private fun frontend(files: List<SourceFile>): FirFrontendResult {
@@ -128,20 +117,43 @@ class K2CompilerFacade(environment: KotlinCoreEnvironment) : KotlinCompilerFacad
             JvmIrMangler
         )
 
-        val fir2IrResult = FirResult(
-            analysisResult.moduleCompilerAnalyzedOutput,
-            null
-        ).convertToIrAndActualize(
+        val fir2IrResult = FirResult(listOf(
+            analysisResult.moduleCompilerAnalyzedOutput
+        )).convertToIrAndActualizeForJvm(
             fir2IrExtensions,
+            Fir2IrConfiguration(
+                configuration.languageVersionSettings,
+                configuration.getBoolean(JVMConfigurationKeys.LINK_VIA_SIGNATURES),
+                object : EvaluatedConstTracker() {
+                    private val storage = ConcurrentHashMap<
+                        String,
+                        ConcurrentHashMap<Pair<Int, Int>, ConstantValue<*>>>()
+
+                    override fun save(
+                        start: Int,
+                        end: Int,
+                        file: String,
+                        constant: ConstantValue<*>
+                    ) {
+                        storage
+                            .getOrPut(file) { ConcurrentHashMap() }
+                            .let { it[start to end] = constant }
+                    }
+
+                    override fun load(start: Int, end: Int, file: String): ConstantValue<*>? {
+                        return storage[file]?.get(start to end)
+                    }
+
+                    override fun load(file: String): Map<Pair<Int, Int>, ConstantValue<*>>? {
+                        return storage[file]
+                    }
+                }
+            ),
             IrGenerationExtension.getInstances(project),
-            configuration.getBoolean(JVMConfigurationKeys.LINK_VIA_SIGNATURES)
+            analysisResult.reporter
         )
 
-        return FirFrontendResult(
-            analysisResult.moduleCompilerAnalyzedOutput.session,
-            fir2IrResult,
-            fir2IrExtensions
-        )
+        return FirFrontendResult(fir2IrResult, fir2IrExtensions)
     }
 
     override fun compileToIr(files: List<SourceFile>): IrModuleFragment =
@@ -172,7 +184,7 @@ class K2CompilerFacade(environment: KotlinCoreEnvironment) : KotlinCompilerFacad
         codegenFactory.generateModuleInFrontendIRMode(
             generationState, irModuleFragment, components.symbolTable, components.irProviders,
             frontendResult.generatorExtensions,
-            FirJvmBackendExtension(frontendResult.session, components),
+            FirJvmBackendExtension(components, frontendResult.firResult.irActualizedResult),
             frontendResult.firResult.pluginContext
         ) {}
         generationState.factory.done()
