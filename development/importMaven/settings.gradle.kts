@@ -19,6 +19,9 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
         google()
+        maven {
+            url = uri("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev/")
+        }
     }
 }
 
@@ -27,6 +30,9 @@ dependencyResolutionManagement {
         mavenCentral()
         google()
         gradlePluginPortal()
+        maven {
+            url = uri("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev/")
+        }
     }
     versionCatalogs {
         create("importMavenLibs") {
