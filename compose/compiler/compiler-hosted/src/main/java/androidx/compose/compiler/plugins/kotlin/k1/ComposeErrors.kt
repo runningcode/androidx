@@ -161,6 +161,12 @@ object ComposeErrors {
         )
 
     @JvmField
+    val MISMATCHED_COMPOSABLE_IN_EXPECT_ACTUAL =
+        DiagnosticFactory0.create<PsiElement>(
+            Severity.ERROR
+        )
+
+    @JvmField
     val REDUNDANT_COMPOSABLE_ANNOTATION = DiagnosticFactory0.create<PsiElement>(Severity.WARNING)
 
     init {
