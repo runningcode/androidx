@@ -86,13 +86,19 @@ interface AnalysisResult {
     )
 
     val files: List<KtFile>
-    val diagnostics: List<Diagnostic>
+    val diagnostics: Map<String, List<Diagnostic>>
 }
 
 abstract class KotlinCompilerFacade(val environment: KotlinCoreEnvironment) {
-    abstract fun analyze(files: List<SourceFile>): AnalysisResult
+    abstract fun analyze(
+        platformFiles: List<SourceFile>,
+        commonFiles: List<SourceFile>
+    ): AnalysisResult
     abstract fun compileToIr(files: List<SourceFile>): IrModuleFragment
-    abstract fun compile(files: List<SourceFile>): GenerationState
+    abstract fun compile(
+        platformFiles: List<SourceFile>,
+        commonFiles: List<SourceFile>
+    ): GenerationState
 
     companion object {
         const val TEST_MODULE_NAME = "test-module"
