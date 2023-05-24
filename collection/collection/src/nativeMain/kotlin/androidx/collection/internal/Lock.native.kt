@@ -16,8 +16,10 @@
 
 package androidx.collection.internal
 
-import kotlin.native.internal.createCleaner
+import kotlin.experimental.ExperimentalNativeApi
+import kotlin.native.ref.createCleaner
 import kotlinx.cinterop.Arena
+import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.ptr
 import platform.posix.pthread_mutex_destroy
@@ -38,12 +40,13 @@ import platform.posix.pthread_mutexattr_t
 internal expect val PTHREAD_MUTEX_RECURSIVE: Int
 
 @Suppress("ACTUAL_WITHOUT_EXPECT") // https://youtrack.jetbrains.com/issue/KT-37316
+@OptIn(ExperimentalForeignApi::class) // https://youtrack.jetbrains.com/issue/KT-57728
 internal actual class Lock actual constructor() {
 
     private val resources = Resources()
 
     @Suppress("unused") // The returned Cleaner must be assigned to a property
-    @ExperimentalStdlibApi
+    @OptIn(ExperimentalNativeApi::class)
     private val cleaner = createCleaner(resources, Resources::destroy)
 
     actual inline fun <T> synchronizedImpl(block: () -> T): T {

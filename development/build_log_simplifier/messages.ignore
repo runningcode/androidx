@@ -1325,3 +1325,7 @@ WARNING: The option setting 'android\.r[0-9]+\.maxWorkers=[0-9]+' is experimenta
 e: Daemon compilation failed: Could not connect to Kotlin compile daemon
 java\.lang\.RuntimeException: Could not connect to Kotlin compile daemon
 Errors were stored into \$SUPPORT/\.gradle/kotlin/errors/errors\-[0-9]+\.log
+# KT-59013 > Task :datastore:datastore-core-okio:linkDebugTestLinuxX64
+w: file://\$GRADLE_USER_HOME/daemon/[0-9]+\.[0-9]+/%[0-9]+Corg\.jetbrains\.kotlinx:atomicfu\-cinterop\-interop%[0-9]+E%[0-9]+@%[0-9]+CTypeDefinitionsConstructor 'ReplaceWith\.<init>' can not be called: The call site provides less value arguments \([0-9]+\) than the constructor requires \([0-9]+\)
+w: file://\$GRADLE_USER_HOME/daemon/[0-9]+\.[0-9]+/%[0-9]+Corg\.jetbrains\.kotlinx:atomicfu\-cinterop\-interop%[0-9]+E%[0-9]+@%[0-9]+CTypeDefinitions:[0-9]+:[0-9]+ Unusable annotation 'Deprecated\.<init>' has been removed from companion object 'mutex_node\.Companion'
+w: file://\$GRADLE_USER_HOME/daemon/[0-9]+\.[0-9]+/%[0-9]+Corg\.jetbrains\.kotlinx:atomicfu\-cinterop\-interop%[0-9]+E%[0-9]+@%[0-9]+CTypeDefinitions:[0-9]+:[0-9]+ Unusable annotation 'Deprecated\.<init>' has been removed from companion object 'lock_support\.Companion'
