@@ -124,11 +124,6 @@ open class PlaygroundExtension @Inject constructor(
 
         settings.rootProject.buildFileName = relativePathToBuild
 
-        includeProject(":lint-checks", "lint-checks")
-        includeProject(":lint-checks:integration-tests", "lint-checks/integration-tests")
-        includeProject(":internal-testutils-common", "testutils/testutils-common")
-        includeProject(":internal-testutils-gradle-plugin", "testutils/testutils-gradle-plugin")
-
         // allow public repositories
         System.setProperty("ALLOW_PUBLIC_REPOS", "true")
 
@@ -147,10 +142,56 @@ open class PlaygroundExtension @Inject constructor(
             throw RuntimeException("Must call setupPlayground() first.")
         }
         val supportSettingsFile = File(supportRootDir, "settings.gradle")
-        SettingsParser.findProjects(supportSettingsFile).filter {
-            filter(it.gradlePath)
-        }.forEach { (projectGradlePath, projectFilePath) ->
-            includeProject(projectGradlePath, projectFilePath)
+        val projects = SettingsParser.findProjects(supportSettingsFile)
+        val selectedProjects = mutableSetOf<SettingsParser.IncludedProject>()
+        selectedProjects.addAll(
+            projects.filter { it.gradlePath in REQUIRED_PROJECTS }
+        )
+        selectedProjects.addAll(
+            projects.filter {
+                filter(it.gradlePath)
+            }
+        )
+        selectedProjects.forEach {
+            includeProject(it.gradlePath, it.filePath)
+        }
+    }
+
+    fun selectProjectsWithDependencies(filter: (String) -> Boolean) {
+        if (supportRootDir == null) {
+            throw RuntimeException("Must call setupPlayground() first.")
+        }
+        val supportSettingsFile = File(supportRootDir, "settings.gradle")
+        val projects = SettingsParser.findProjects(supportSettingsFile)
+        val selectedProjects = mutableSetOf<SettingsParser.IncludedProject>()
+        selectedProjects.addAll(
+            projects.filter { it.gradlePath in REQUIRED_PROJECTS }
+        )
+
+        selectedProjects.addAll(projects.filter { filter(it.gradlePath) })
+
+        // now add dependencies
+        val buildFileParser = BuildFileParser(
+            supportRootDir!!,
+            projects
+        )
+
+        val toBeRecursed = mutableSetOf<SettingsParser.IncludedProject>()
+        toBeRecursed.addAll(selectedProjects)
+        while (toBeRecursed.isNotEmpty()) {
+            val visitNow = toBeRecursed.toList()
+            toBeRecursed.clear()
+            visitNow.forEach { includedProject ->
+                buildFileParser.getDependencyProjects(includedProject).forEach {
+                    if (selectedProjects.add(it)) {
+                        println("adding ${it} due to dependency from $includedProject")
+                        toBeRecursed.add(it)
+                    }
+                }
+            }
+        }
+        selectedProjects.forEach {
+            includeProject(it.gradlePath, it.filePath)
         }
     }
 
@@ -165,5 +206,14 @@ open class PlaygroundExtension @Inject constructor(
         if (name == ":test:screenshot:screenshot") return true
         if (name == ":test:screenshot:screenshot-proto") return true
         return false
+    }
+
+    companion object {
+        private val REQUIRED_PROJECTS = setOf(
+            ":lint-checks",
+            ":lint-checks:integration-tests",
+            ":internal-testutils-common",
+            ":internal-testutils-gradle-plugin"
+        )
     }
 }

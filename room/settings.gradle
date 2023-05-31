@@ -26,14 +26,10 @@ rootProject.name = "room-playground"
 
 playground {
     setupPlayground("..")
-    selectProjectsFromAndroidX({ name ->
+    selectProjectsWithDependencies( { name ->
+        if (name.contains("benchmark")) return false // requires prebuilts
         if (name.startsWith(":room")) return true
-        if (name.startsWith(":sqlite") && !name.contains("inspection")) return true
-        if (name == ":annotation:annotation-experimental") return true
-        if (name == ":annotation:annotation-experimental-lint") return true
-        if (name == ":annotation:annotation-experimental-lint-integration-tests") return true
-        if (name == ":internal-testutils-truth") return true
-        if (name == ":internal-testutils-kmp") return true
+        if (name.startsWith(":sqlite")) return true
         return false
     })
 }
