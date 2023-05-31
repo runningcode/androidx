@@ -7,11 +7,10 @@ plugins {
 }
 
 rootProject.name = "core-playground"
-
+includeBuild("../placeholder")
 playground {
     setupPlayground("..")
     selectProjectsWithDependencies( { name ->
-        if (name.startsWith(":core") && !name.contains("haptics")) return true
-        return false
+        return name.startsWith(":core")
     })
 }

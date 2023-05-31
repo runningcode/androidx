@@ -17,11 +17,11 @@
 package androidx.playground
 
 import androidx.build.SettingsParser
-import org.gradle.api.GradleException
-import org.gradle.api.initialization.Settings
 import java.io.File
 import java.util.Properties
 import javax.inject.Inject
+import org.gradle.api.GradleException
+import org.gradle.api.initialization.Settings
 
 open class PlaygroundExtension @Inject constructor(
     private val settings: Settings
@@ -184,7 +184,7 @@ open class PlaygroundExtension @Inject constructor(
             visitNow.forEach { includedProject ->
                 buildFileParser.getDependencyProjects(includedProject).forEach {
                     if (selectedProjects.add(it)) {
-                        println("adding ${it} due to dependency from $includedProject")
+                        println("adding $it due to dependency from $includedProject")
                         toBeRecursed.add(it)
                     }
                 }

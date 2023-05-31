@@ -49,7 +49,8 @@ class BuildFileParser(
                 }
                 if (multilineProjectReference.matcher(line).find()) {
                     throw IllegalStateException(
-                        "Multi-line project() references are not supported. Please fix ${buildGradle.absolutePath}"
+                        "Multi-line project() references are not supported." +
+                                "Please fix ${buildGradle.absolutePath}"
                     )
                 }
                 val matcherInspection = inspection.matcher(line)
@@ -78,7 +79,8 @@ class BuildFileParser(
 
     companion object {
         private val projectReferencePattern = Pattern.compile(
-            "(project|projectOrArtifact)\\((path: )?[\"'](?<name>\\S*)[\"'](, configuration: .*)?\\)"
+            "(project|projectOrArtifact)" +
+                    "\\((path: )?[\"'](?<name>\\S*)[\"'](, configuration: .*)?\\)"
         )
         private val multilineProjectReference = Pattern.compile("project\\(\$")
         private val inspection = Pattern.compile("packageInspector\\(project, \"(.*)\"\\)")
