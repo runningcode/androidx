@@ -28,9 +28,10 @@ class ProjectSelection(
 
     val selection
         get() = selectedProjects.toList()
+
     fun addProject(
         includedProject: SettingsParser.IncludedProject
-    ) : Boolean {
+    ): Boolean {
         if (selectedProjects.contains(includedProject)) {
             println("already included: $includedProject")
             return false
