@@ -199,31 +199,9 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
          *         included in this build.
          */
         fun projectOrArtifact(rootProject: Project, path: String): Any {
-            val requested = rootProject.findProject(path)
-            if (requested != null) {
-                return requested
-            } else {
-                val sections = path.split(":")
-
-                if (sections[0].isNotEmpty()) {
-                    throw GradleException(
-                        "Expected projectOrArtifact path to start with empty section but got $path"
-                    )
-                }
-
-                // Typically androidx projects have 3 sections, compose has 4.
-                if (sections.size >= 3) {
-                    val group = sections
-                        // Filter empty sections as many declarations start with ':'
-                        .filter { it.isNotBlank() }
-                        // Last element is the artifact.
-                        .dropLast(1)
-                        .joinToString(".")
-                    return "androidx.$group:${sections.last()}:$SNAPSHOT_MARKER"
-                }
-
-                throw GradleException("projectOrArtifact cannot find/replace project $path")
-            }
+            return rootProject.findProject(path) ?: error("""
+                ProjectOrArtifact is deprecated
+            """.trimIndent())
         }
         const val SNAPSHOT_MARKER = "REPLACE_WITH_SNAPSHOT"
     }

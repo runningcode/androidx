@@ -27,7 +27,6 @@ rootProject.name = "room-playground"
 playground {
     setupPlayground("..")
     selectProjectsWithDependencies( { name ->
-        if (name.contains("benchmark")) return false // requires prebuilts
         if (name.startsWith(":room")) return true
         if (name.startsWith(":sqlite")) return true
         return false

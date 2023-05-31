@@ -129,6 +129,8 @@ open class PlaygroundExtension @Inject constructor(
 
         // specify out dir location
         System.setProperty("CHECKOUT_ROOT", supportRoot.path)
+        // workaround for: b/203825166
+        settings.includeBuild(supportRoot.resolve("placeholder"))
     }
 
     /**
@@ -138,23 +140,7 @@ open class PlaygroundExtension @Inject constructor(
      *               If filter returns true, it will be included in the build.
      */
     fun selectProjectsFromAndroidX(filter: (String) -> Boolean) {
-        if (supportRootDir == null) {
-            throw RuntimeException("Must call setupPlayground() first.")
-        }
-        val supportSettingsFile = File(supportRootDir, "settings.gradle")
-        val projects = SettingsParser.findProjects(supportSettingsFile)
-        val selectedProjects = mutableSetOf<SettingsParser.IncludedProject>()
-        selectedProjects.addAll(
-            projects.filter { it.gradlePath in REQUIRED_PROJECTS }
-        )
-        selectedProjects.addAll(
-            projects.filter {
-                filter(it.gradlePath)
-            }
-        )
-        selectedProjects.forEach {
-            includeProject(it.gradlePath, it.filePath)
-        }
+        selectProjectsWithDependencies(filter)
     }
 
     fun selectProjectsWithDependencies(filter: (String) -> Boolean) {
@@ -163,34 +149,16 @@ open class PlaygroundExtension @Inject constructor(
         }
         val supportSettingsFile = File(supportRootDir, "settings.gradle")
         val projects = SettingsParser.findProjects(supportSettingsFile)
-        val selectedProjects = mutableSetOf<SettingsParser.IncludedProject>()
-        selectedProjects.addAll(
-            projects.filter { it.gradlePath in REQUIRED_PROJECTS }
-        )
-
-        selectedProjects.addAll(projects.filter { filter(it.gradlePath) })
-
-        // now add dependencies
-        val buildFileParser = BuildFileParser(
-            supportRootDir!!,
-            projects
-        )
-
-        val toBeRecursed = mutableSetOf<SettingsParser.IncludedProject>()
-        toBeRecursed.addAll(selectedProjects)
-        while (toBeRecursed.isNotEmpty()) {
-            val visitNow = toBeRecursed.toList()
-            toBeRecursed.clear()
-            visitNow.forEach { includedProject ->
-                buildFileParser.getDependencyProjects(includedProject).forEach {
-                    if (selectedProjects.add(it)) {
-                        println("adding $it due to dependency from $includedProject")
-                        toBeRecursed.add(it)
-                    }
-                }
-            }
+        val projectSelection = ProjectSelection(supportRootDir!!, projects)
+        projects.filter {
+            it.gradlePath in REQUIRED_PROJECTS
+        }.forEach {
+            projectSelection.addProject(it)
         }
-        selectedProjects.forEach {
+        projects.filter { filter(it.gradlePath) }.forEach {
+            projectSelection.addProject(it)
+        }
+        projectSelection.selection.forEach {
             includeProject(it.gradlePath, it.filePath)
         }
     }

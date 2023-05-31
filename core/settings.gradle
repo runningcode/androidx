@@ -7,7 +7,7 @@ plugins {
 }
 
 rootProject.name = "core-playground"
-includeBuild("../placeholder")
+//includeBuild("../placeholder")
 playground {
     setupPlayground("..")
     selectProjectsWithDependencies( { name ->
