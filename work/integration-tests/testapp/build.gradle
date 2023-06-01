@@ -50,8 +50,8 @@ android {
 }
 
 dependencies {
-    annotationProcessor(projectOrArtifact(":room:room-compiler"))
-    implementation(projectOrArtifact(":room:room-runtime"))
+    annotationProcessor(project(":room:room-compiler"))
+    implementation(project(":room:room-runtime"))
 
     implementation(libs.constraintLayout)
     // Fix for BuildCompat.isAtleastS()

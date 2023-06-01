@@ -82,7 +82,7 @@ dependencies {
     androidTestImplementation(libs.truth)
     androidTestImplementation(libs.kotlinReflect)
 
-    samples(projectOrArtifact(":glance:glance-appwidget:glance-appwidget-samples"))
+    samples(project(":glance:glance-appwidget:glance-appwidget-samples"))
 }
 
 android {

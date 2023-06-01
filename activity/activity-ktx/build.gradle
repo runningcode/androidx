@@ -38,7 +38,7 @@ dependencies {
     }
     api(libs.kotlinStdlib)
 
-    androidTestImplementation(projectOrArtifact(":lifecycle:lifecycle-runtime-testing"))
+    androidTestImplementation(project(":lifecycle:lifecycle-runtime-testing"))
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.truth)
     androidTestImplementation(libs.testExtJunit)

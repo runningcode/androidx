@@ -27,17 +27,17 @@ plugins {
 
 dependencies {
 
-    api projectOrArtifact(":lifecycle:lifecycle-common-java8")
-    api projectOrArtifact(":lifecycle:lifecycle-viewmodel-ktx")
-    api projectOrArtifact(":lifecycle:lifecycle-viewmodel-savedstate")
+    api project(":lifecycle:lifecycle-common-java8")
+    api project(":lifecycle:lifecycle-viewmodel-ktx")
+    api project(":lifecycle:lifecycle-viewmodel-savedstate")
     api("androidx.compose.runtime:runtime:1.0.1")
     api "androidx.compose.ui:ui:1.0.1"
     api("androidx.annotation:annotation-experimental:1.1.0")
 
     implementation(libs.kotlinStdlib)
 
-    androidTestImplementation projectOrArtifact(":compose:ui:ui-test-junit4")
-    androidTestImplementation projectOrArtifact(":compose:test-utils")
+    androidTestImplementation project(":compose:ui:ui-test-junit4")
+    androidTestImplementation project(":compose:test-utils")
     androidTestImplementation(libs.testRules)
     androidTestImplementation(libs.testRunner)
     androidTestImplementation(libs.junit)
@@ -49,12 +49,12 @@ dependencies {
     // Outside of androidx this is resolved via constraint added to lifecycle-common,
     // but it doesn't work in androidx.
     // See aosp/1804059
-    androidTestImplementation projectOrArtifact(":lifecycle:lifecycle-common-java8")
-    androidTestImplementation projectOrArtifact(":lifecycle:lifecycle-viewmodel-savedstate")
-    androidTestImplementation projectOrArtifact(":activity:activity-compose")
-    androidTestImplementation(projectOrArtifact(":lifecycle:lifecycle-runtime-testing"))
+    androidTestImplementation project(":lifecycle:lifecycle-common-java8")
+    androidTestImplementation project(":lifecycle:lifecycle-viewmodel-savedstate")
+    androidTestImplementation project(":activity:activity-compose")
+    androidTestImplementation(project(":lifecycle:lifecycle-runtime-testing"))
 
-    samples(projectOrArtifact(":lifecycle:lifecycle-viewmodel-compose:lifecycle-viewmodel-compose-samples"))
+    samples(project(":lifecycle:lifecycle-viewmodel-compose:lifecycle-viewmodel-compose-samples"))
 }
 
 androidx {

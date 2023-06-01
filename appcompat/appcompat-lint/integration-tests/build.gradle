@@ -6,7 +6,7 @@ plugins {
 
 dependencies {
     implementation(project(":appcompat:appcompat"))
-    implementation(projectOrArtifact(":core:core"))
+    implementation(project(":core:core"))
     api(libs.kotlinStdlib)
 }
 

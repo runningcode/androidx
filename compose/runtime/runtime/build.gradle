@@ -109,9 +109,9 @@ androidXMultiplatform {
 }
 
 dependencies {
-    lintChecks(projectOrArtifact(":compose:runtime:runtime-lint"))
-    lintPublish(projectOrArtifact(":compose:runtime:runtime-lint"))
-    samples(projectOrArtifact(":compose:runtime:runtime:runtime-samples"))
+    lintChecks(project(":compose:runtime:runtime-lint"))
+    lintPublish(project(":compose:runtime:runtime-lint"))
+    samples(project(":compose:runtime:runtime:runtime-samples"))
 }
 
 android {

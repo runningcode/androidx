@@ -59,7 +59,7 @@ dependencies {
         exclude group: "androidx.fragment", module: "fragment"
     })
 
-    testImplementation(projectOrArtifact(":fragment:fragment"))
+    testImplementation(project(":fragment:fragment"))
     testImplementation(libs.kotlinStdlib)
     testImplementation(libs.testExtJunit)
     testImplementation(libs.testCore)

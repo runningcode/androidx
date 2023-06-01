@@ -112,7 +112,7 @@ androidXMultiplatform {
 }
 
 dependencies {
-    samples(projectOrArtifact(":compose:runtime:runtime-saveable:runtime-saveable-samples"))
+    samples(project(":compose:runtime:runtime-saveable:runtime-saveable-samples"))
     lintPublish(project(":compose:runtime:runtime-saveable-lint"))
 }
 

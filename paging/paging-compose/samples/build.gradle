@@ -26,10 +26,10 @@ plugins {
 dependencies {
     implementation(libs.kotlinStdlib)
 
-    compileOnly(projectOrArtifact(":annotation:annotation-sampled"))
-    implementation(projectOrArtifact(":compose:foundation:foundation"))
-    implementation(projectOrArtifact(":compose:material:material"))
-    implementation projectOrArtifact(":compose:ui:ui-tooling")
+    compileOnly(project(":annotation:annotation-sampled"))
+    implementation(project(":compose:foundation:foundation"))
+    implementation(project(":compose:material:material"))
+    implementation project(":compose:ui:ui-tooling")
     implementation(project(":paging:paging-compose"))
 }
 

@@ -29,23 +29,23 @@ dependencies {
     implementation(libs.kotlinStdlib)
     api("androidx.compose.runtime:runtime:1.0.1")
     api("androidx.compose.runtime:runtime-saveable:1.0.1")
-    api(projectOrArtifact(":activity:activity-ktx"))
+    api(project(":activity:activity-ktx"))
     api("androidx.lifecycle:lifecycle-viewmodel:2.6.1")
     api("androidx.compose.ui:ui:1.0.1")
 
-    androidTestImplementation projectOrArtifact(":compose:ui:ui-test-junit4")
-    androidTestImplementation projectOrArtifact(":compose:material:material")
-    androidTestImplementation projectOrArtifact(":compose:test-utils")
-    androidTestImplementation projectOrArtifact(":lifecycle:lifecycle-runtime-testing")
+    androidTestImplementation project(":compose:ui:ui-test-junit4")
+    androidTestImplementation project(":compose:material:material")
+    androidTestImplementation project(":compose:test-utils")
+    androidTestImplementation project(":lifecycle:lifecycle-runtime-testing")
     androidTestImplementation(libs.testRunner)
     androidTestImplementation(libs.testExtJunitKtx)
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.truth)
 
-    lintChecks(projectOrArtifact(":activity:activity-compose-lint"))
-    lintPublish(projectOrArtifact(":activity:activity-compose-lint"))
+    lintChecks(project(":activity:activity-compose-lint"))
+    lintPublish(project(":activity:activity-compose-lint"))
 
-    samples(projectOrArtifact(":activity:activity-compose:activity-compose-samples"))
+    samples(project(":activity:activity-compose:activity-compose-samples"))
 }
 
 androidx {

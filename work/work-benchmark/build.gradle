@@ -26,8 +26,8 @@ plugins {
 dependencies {
     androidTestImplementation(project(":work:work-runtime-ktx"))
     androidTestImplementation(project(":work:work-multiprocess"))
-    androidTestImplementation(projectOrArtifact(":benchmark:benchmark-junit4"))
-    androidTestImplementation(projectOrArtifact(":room:room-runtime"))
+    androidTestImplementation(project(":benchmark:benchmark-junit4"))
+    androidTestImplementation(project(":room:room-runtime"))
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.testExtJunit)
     androidTestImplementation(libs.testCore)

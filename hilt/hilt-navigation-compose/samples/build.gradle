@@ -27,8 +27,8 @@ plugins {
 dependencies {
     implementation(libs.kotlinStdlib)
 
-    compileOnly(projectOrArtifact(":annotation:annotation-sampled"))
-    implementation(projectOrArtifact(":hilt:hilt-navigation-compose"))
+    compileOnly(project(":annotation:annotation-sampled"))
+    implementation(project(":hilt:hilt-navigation-compose"))
 }
 
 androidx {

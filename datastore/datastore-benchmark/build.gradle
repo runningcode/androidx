@@ -27,7 +27,7 @@ dependencies {
     androidTestImplementation(project(":datastore:datastore-core"))
     androidTestImplementation(project(":internal-testutils-datastore"))
     androidTestImplementation(libs.kotlinStdlib)
-    androidTestImplementation(projectOrArtifact(":benchmark:benchmark-junit4"))
+    androidTestImplementation(project(":benchmark:benchmark-junit4"))
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.testExtJunit)
     androidTestImplementation(libs.testCore)

@@ -34,8 +34,8 @@ android {
 
 dependencies {
     implementation(project(":core:core-ktx"))
-    implementation(projectOrArtifact(":appcompat:appcompat"))
-    implementation projectOrArtifact(":annotation:annotation")
+    implementation(project(":appcompat:appcompat"))
+    implementation project(":annotation:annotation")
     compileOnly(project(":annotation:annotation-sampled"))
 }
 

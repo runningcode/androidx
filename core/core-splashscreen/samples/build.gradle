@@ -35,10 +35,10 @@ android {
 dependencies {
     implementation(project(":core:core-splashscreen"))
     implementation(project(":core:core-ktx"))
-    implementation(projectOrArtifact(":appcompat:appcompat"))
-    implementation projectOrArtifact(":annotation:annotation")
-    implementation(projectOrArtifact(":interpolator:interpolator"))
-    compileOnly(projectOrArtifact(":annotation:annotation-sampled"))
+    implementation(project(":appcompat:appcompat"))
+    implementation project(":annotation:annotation")
+    implementation(project(":interpolator:interpolator"))
+    compileOnly(project(":annotation:annotation-sampled"))
 }
 
 androidx {

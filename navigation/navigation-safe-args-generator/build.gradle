@@ -35,7 +35,7 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.googleCompileTesting)
-    testImplementation(projectOrArtifact(":room:room-compiler-processing-testing"), {
+    testImplementation(project(":room:room-compiler-processing-testing"), {
         exclude group: "androidx.room", module: "room-compiler-processing"
     })
     testImplementation(fileTree(
