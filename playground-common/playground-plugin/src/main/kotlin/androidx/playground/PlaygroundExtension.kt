@@ -22,6 +22,7 @@ import java.util.Properties
 import javax.inject.Inject
 import org.gradle.api.GradleException
 import org.gradle.api.initialization.Settings
+import java.util.Locale
 
 open class PlaygroundExtension @Inject constructor(
     private val settings: Settings
@@ -66,7 +67,13 @@ open class PlaygroundExtension @Inject constructor(
             parentDir
         )
         settings.include(name)
-        settings.project(name).projectDir = projectDir
+        if (PlaygroundCompatibility.isIncompatible(name)) {
+            println("faking $name")
+            settings.project(name).buildFileName = "ignored.gradle"
+        } else {
+            println("adding for real $name")
+            settings.project(name).projectDir = projectDir
+        }
     }
 
     /**
@@ -131,6 +138,7 @@ open class PlaygroundExtension @Inject constructor(
         System.setProperty("CHECKOUT_ROOT", supportRoot.path)
         // workaround for: b/203825166
         settings.includeBuild(supportRoot.resolve("placeholder"))
+        setupSkiko()
     }
 
     /**
@@ -174,6 +182,44 @@ open class PlaygroundExtension @Inject constructor(
         if (name == ":test:screenshot:screenshot") return true
         if (name == ":test:screenshot:screenshot-proto") return true
         return false
+    }
+
+    private fun setupSkiko() {
+        var snapshotSwapper: SnapshotSwapper? = null
+        settings.gradle.afterProject { project ->
+            val swapper = snapshotSwapper ?: SnapshotSwapper(project.rootProject)
+            swapper.swapIncompatibleProjectDependencies(project)
+        }
+        settings.dependencyResolutionManagement {
+
+            it.versionCatalogs {
+                val libs = it.findByName("libs") ?: it.create("libs")
+                libs.apply {
+                        val os = System.getProperty("os.name").lowercase(Locale.US)
+                        val currentOsArtifact = if (os.contains("mac os x") ||  os.contains("darwin") || os.contains("osx")) {
+                            val arch = System.getProperty("os.arch")
+                            if (arch == "aarch64") {
+                                "skiko-awt-runtime-macos-arm64"
+                            } else {
+                                "skiko-awt-runtime-macos-x64"
+                            }
+                        } else if (os.startsWith("win")) {
+                            "skiko-awt-runtime-windows-x64"
+                        } else if (os.startsWith("linux") ) {
+                            val arch = System.getProperty("os.arch")
+                            if (arch == "aarch64") {
+                                "skiko-awt-runtime-linux-arm64"
+                            } else {
+                                "skiko-awt-runtime-linux-x64"
+                            }
+                        } else {
+                            throw GradleException("Unsupported operating system $os")
+                        }
+                        library("skikoCurrentOs", "org.jetbrains.skiko", currentOsArtifact).versionRef("skiko")
+                    }
+
+            }
+        }
     }
 
     companion object {

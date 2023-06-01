@@ -154,7 +154,9 @@ class AndroidXImplPlugin @Inject constructor(
             it.configureWithAndroidXExtension(extension)
         }
         project.configureConstraintsWithinGroup(extension)
-        project.validateProjectParser(extension)
+        if (!ProjectLayoutType.isPlayground(project)) {
+            project.validateProjectParser(extension)
+        }
         project.validateAllArchiveInputsRecognized()
         project.afterEvaluate {
             if (extension.shouldPublishSbom()) {

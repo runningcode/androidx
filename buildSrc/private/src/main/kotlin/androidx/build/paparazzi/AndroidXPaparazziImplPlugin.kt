@@ -17,6 +17,7 @@
 package androidx.build.paparazzi
 
 import androidx.build.OperatingSystem
+import androidx.build.ProjectLayoutType
 import androidx.build.SupportConfig.COMPILE_SDK_VERSION
 import androidx.build.SupportConfig.TARGET_SDK_VERSION
 import androidx.build.getLibraryByName
@@ -68,7 +69,7 @@ class AndroidXPaparazziImplPlugin @Inject constructor(
         val cachedReportDirectory = reportDirectory
         val android = project.the<BaseExtension>()
         val packageName = requireNotNull(android.namespace) {
-            "android.namespace must be set for Paparazzi"
+            "android.namespace must be set for Paparazzi: ${project.path}"
         }
 
         // Attach unzipped Paparazzi native directory as a task input

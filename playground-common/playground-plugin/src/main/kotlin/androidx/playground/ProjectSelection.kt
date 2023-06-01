@@ -16,6 +16,8 @@
 package androidx.playground
 
 import androidx.build.SettingsParser
+import androidx.playground.PlaygroundCompatibility.IncompatibilityStrategy.ExcludeProjectWithDependants
+import androidx.playground.PlaygroundCompatibility.IncompatibilityStrategy.Replace
 import java.io.File
 
 class ProjectSelection(
@@ -32,38 +34,79 @@ class ProjectSelection(
     fun addProject(
         includedProject: SettingsParser.IncludedProject
     ): Boolean {
+        println("add project :$includedProject")
+        if (!isCompatible(includedProject)) {
+            error("""
+                Cannot add project $includedProject because it depends on an incompatible project.
+                Dependency: ${findIncompatibilityPath(includedProject)}
+            """.trimIndent())
+        }
+        return addProjectAlreadyChecked(includedProject)
+    }
+
+    private fun addProjectAlreadyChecked(
+        includedProject: SettingsParser.IncludedProject
+    ): Boolean {
+        println("add project internal :$includedProject")
+
         if (selectedProjects.contains(includedProject)) {
             println("already included: $includedProject")
             return false
         }
-        if (!isCompatible(includedProject)) {
-            println("incompatible project: $includedProject")
-            return false
-        }
         selectedProjects.add(includedProject)
-        buildFileParser.getDependencyProjects(includedProject).forEach {
-            addProject(it)
+        val incompatibility = PlaygroundCompatibility.findIncompatibility(includedProject.gradlePath)
+        if (incompatibility?.strategy == ExcludeProjectWithDependants) {
+            error("should never try to include include project")
+        }
+        if (incompatibility == null) {
+            buildFileParser.getDependencyProjects(includedProject).forEach {
+                addProjectAlreadyChecked(it)
+            }
         }
         return true
     }
 
+    private fun findIncompatibilityPath(includedProject: SettingsParser.IncludedProject,
+                                        stack: List<SettingsParser.IncludedProject> = emptyList()
+    ): String? {
+        if (includedProject in stack) return null
+        val incompatibility = PlaygroundCompatibility.findIncompatibility(includedProject.gradlePath)
+        if (incompatibility?.strategy == ExcludeProjectWithDependants) {
+            return includedProject.gradlePath
+        } else if (incompatibility?.strategy is Replace) {
+            return null
+        }
+        val subPath = stack + includedProject
+        buildFileParser.getDependencyProjects(includedProject).forEach {
+            val subIncompatible = findIncompatibilityPath(it, stack = subPath)
+            if (subIncompatible != null) {
+                return "${includedProject.gradlePath} -> $subIncompatible"
+            }
+        }
+        return null
+    }
+
     private fun isCompatible(includedProject: SettingsParser.IncludedProject): Boolean {
         return projectCompatibilityCache.getOrPut(includedProject) {
-            if (includedProject.gradlePath in INCOMPATIBLE_PROJECTS) {
-                false
-            } else {
+            val incompatibility = PlaygroundCompatibility.findIncompatibility(includedProject.gradlePath)
+            if (incompatibility == null) {
                 // temporarily set it to true to avoid recursion
                 projectCompatibilityCache.put(includedProject, true)
+                // check dependencies
                 buildFileParser.getDependencyProjects(includedProject).all {
                     isCompatible(it)
                 }
+            } else {
+                // known project
+                val strategy = incompatibility.strategy
+                strategy != ExcludeProjectWithDependants
             }
         }
     }
 
     companion object {
-        val INCOMPATIBLE_PROJECTS = setOf(
-            ":benchmark:benchmark-common"
-        )
+        private val INCOMPATIBLE_PROJECTS = PlaygroundCompatibility.incompatibilities.filter {
+            it.strategy == ExcludeProjectWithDependants
+        }.map { it.gradlePath }
     }
 }

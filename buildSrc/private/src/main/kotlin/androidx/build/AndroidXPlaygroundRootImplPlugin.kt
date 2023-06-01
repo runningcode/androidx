@@ -64,15 +64,33 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
 
     private fun configureSubProject(project: Project) {
         project.repositories.addPlaygroundRepositories()
-        project.configurations.all { configuration ->
-            configuration.resolutionStrategy.eachDependency { details ->
-                val requested = details.requested
-                if (requested.version == SNAPSHOT_MARKER) {
-                    val snapshotVersion = findSnapshotVersion(requested.group, requested.name)
-                    details.useVersion(snapshotVersion)
-                }
-            }
-        }
+//        project.configurations.all { configuration ->
+//            configuration.resolutionStrategy.eachDependency { details ->
+//                val requested = details.requested
+//                if (requested.module.name == "benchmark-common") {
+//                    val newGroup = requested.group.replace(
+//                        "collections-playground",
+//                        "androidx"
+//                    )
+////                    error("""
+////                        "replace this $requested"
+////                        g:${requested.group}
+////                        m:${requested.module.name}
+////                        v:${requested.version}
+////                        newGroup: $newGroup
+////
+////                    """.trimIndent())
+//                    val snapshotVersion = findSnapshotVersion(newGroup, requested.name)
+////                    if (true) error("snapshot versionX: $snapshotVersion")
+//                    details.useTarget("$newGroup:${requested.module.name}:$snapshotVersion")
+//                    //details.useVersion(snapshotVersion)
+//                }
+////                if (requested.version == SNAPSHOT_MARKER) {
+////                    val snapshotVersion = findSnapshotVersion(requested.group, requested.name)
+////                    details.useVersion(snapshotVersion)
+////                }
+//            }
+        //}
     }
 
     /**
