@@ -144,7 +144,6 @@ class AndroidXImplPlugin @Inject constructor(
         project.configureExternalDependencyLicenseCheck()
         project.configureProjectStructureValidation(extension)
         project.configureProjectVersionValidation(extension)
-        project.registerProjectOrArtifact()
         project.addCreateLibraryBuildInfoFileTasks(extension)
 
         project.configurations.create("samples")
@@ -162,34 +161,6 @@ class AndroidXImplPlugin @Inject constructor(
             if (extension.shouldPublishSbom()) {
                 project.configureSbomPublishing()
             }
-        }
-    }
-
-    private fun Project.registerProjectOrArtifact() {
-        // Add a method for each sub project where they can declare an optional
-        // dependency on a project or its latest snapshot artifact.
-        if (!ProjectLayoutType.isPlayground(this)) {
-            // In AndroidX build, this is always enforced to the project
-            extra.set(
-                PROJECT_OR_ARTIFACT_EXT_NAME,
-                KotlinClosure1<String, Project>(
-                    function = {
-                        // this refers to the first parameter of the closure.
-                        project.resolveProject(this)
-                    }
-                )
-            )
-        } else {
-            // In Playground builds, they are converted to the latest SNAPSHOT artifact if the
-            // project is not included in that playground.
-            extra.set(
-                PROJECT_OR_ARTIFACT_EXT_NAME,
-                KotlinClosure1<String, Any>(
-                    function = {
-                        AndroidXPlaygroundRootImplPlugin.projectOrArtifact(rootProject, this)
-                    }
-                )
-            )
         }
     }
 
@@ -1185,5 +1156,3 @@ fun removeLineAndColumnAttributes(baseline: String): String = baseline.replace(
     "\\s*(line|column)=\"\\d+?\"".toRegex(),
     ""
 )
-
-const val PROJECT_OR_ARTIFACT_EXT_NAME = "projectOrArtifact"
