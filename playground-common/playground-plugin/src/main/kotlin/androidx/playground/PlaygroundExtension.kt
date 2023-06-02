@@ -21,6 +21,7 @@ import java.io.File
 import java.util.Properties
 import javax.inject.Inject
 import org.gradle.api.GradleException
+import org.gradle.api.Project
 import org.gradle.api.initialization.Settings
 import java.util.Locale
 
@@ -67,13 +68,32 @@ open class PlaygroundExtension @Inject constructor(
             parentDir
         )
         settings.include(name)
-        if (PlaygroundCompatibility.isIncompatible(name)) {
+        val incompatibility = PlaygroundCompatibility.findIncompatibility(name)
+        check(incompatibility?.strategy != PlaygroundCompatibility.IncompatibilityStrategy.ExcludeProjectWithDependants) {
+            "Cannot include $name because it is fully incompatible"
+        }
+        if (incompatibility != null) {
             println("faking $name")
             settings.project(name).buildFileName = "ignored.gradle"
+            settings.gradle.afterProject {
+                if (it.path == name) {
+                    configureArtifacts(it, incompatibility)
+                }
+            }
         } else {
             println("adding for real $name")
             settings.project(name).projectDir = projectDir
         }
+    }
+
+    private fun configureArtifacts(
+        project: Project,
+        incompatibility: PlaygroundCompatibility.Incompatibility
+    ) {
+        SnapshotSwapper(project.rootProject).configureAritfacts(
+            project,
+            incompatibility
+        )
     }
 
     /**

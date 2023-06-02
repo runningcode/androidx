@@ -20,6 +20,7 @@ import groovy.xml.DOMBuilder
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.artifacts.DependencyResolveDetails
+import org.gradle.api.attributes.Attribute
 import java.net.URL
 
 /**
@@ -35,17 +36,29 @@ class SnapshotSwapper(
      */
     private val repos = PlaygroundRepositories(config)
 
+    fun swapIncompatibleProjectDependencies2(
+        project: Project
+    ) {
+        val replacements = PlaygroundCompatibility.incompatibilities.mapNotNull {
+            when(val strategy = it.strategy) {
+                PlaygroundCompatibility.IncompatibilityStrategy.ExcludeProjectWithDependants -> null
+                is PlaygroundCompatibility.IncompatibilityStrategy.Replace.WithPrebuilt -> {
+                    it.gradlePath to listOf(
+                        strategy.group,
+                        strategy.module,
+                        findSnapshotVersion(strategy.group, strategy.module)
+                    ).joinToString(":")
+                }
+                is PlaygroundCompatibility.IncompatibilityStrategy.Replace.WithPublic -> {
+                    it.gradlePath to strategy.coordinates
+                }
+            }
+        }
+    }
     fun swapIncompatibleProjectDependencies(
         project: Project
     ) {
-        val maybeLog = project.path == ":compose:ui:ui"
-        if (maybeLog) {
-//            project.configurations.whenObjectAdded {
-//                if (it.name == "debugUnitTestRuntimeClasspath") {
-//                    error("who is this")
-//                }
-//            }
-        }
+        if(true) return
 
         project.configurations.all { configuration ->
             val doLog = configuration.name == "debugUnitTestRuntimeClasspath"
@@ -57,13 +70,6 @@ class SnapshotSwapper(
                         "${project.rootProject.name}.",
                         missingDelimiterValue = ""
                     ).replace(".",":")
-//                    if (paparazzi) {
-//                        error("""
-//                            req: ${requested}
-//                            guess: ${pathPrefix}
-//                            full guess: :$pathPrefix:${requested.name}
-//                        """.trimIndent())
-//                    }
                     if (pathPrefix != "") {
                         val projectPath = ":$pathPrefix:${requested.name}"
                         val incompatibility = findIncompatibility(projectPath)
@@ -109,7 +115,20 @@ class SnapshotSwapper(
             it.gradlePath == projectPath
         }
     }
-
+    private fun artifactCoordinates(strategy: PlaygroundCompatibility.IncompatibilityStrategy.Replace): String {
+        return when(strategy) {
+            is PlaygroundCompatibility.IncompatibilityStrategy.Replace.WithPrebuilt -> {
+                val version = findSnapshotVersion(
+                    strategy.group,
+                    strategy.module
+                )
+                return "${strategy.group}:${strategy.module}:$version"
+            }
+            is PlaygroundCompatibility.IncompatibilityStrategy.Replace.WithPublic -> {
+                return strategy.coordinates
+            }
+        }
+    }
     /**
      * Finds the snapshot version from the AndroidX snapshot repository.
      *
@@ -143,6 +162,35 @@ class SnapshotSwapper(
                 snapshotVersion
             }
         }
+    }
+
+    fun configureAritfacts(
+        project: Project,
+        incompatibility: PlaygroundCompatibility.Incompatibility
+    ) {
+        project.configurations.create(
+            "prebuiltDependencyConfiguration"
+        ) { configuration ->
+            configuration.attributes.apply {
+                attribute(
+                    createAttribute("com.android.build.api.attributes.AgpVersionAttr"),
+                    "8.1.0-beta02"
+                )
+                //attribute(KotlinPlatformType.attribute, KotlinPlatformType.native)
+            }
+            val strategy = (incompatibility.strategy as PlaygroundCompatibility.IncompatibilityStrategy.Replace)
+            configuration.dependencies.add(
+                project.dependencies.create(
+                    artifactCoordinates(strategy)
+                )
+            )
+        }
+    }
+
+    private fun createAttribute(
+        name: String
+    ): Attribute<String> {
+        return Attribute.of(name, String::class.java)
     }
 
     private data class PlaygroundProperties(

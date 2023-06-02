@@ -40,18 +40,6 @@ object PlaygroundCompatibility {
             gradlePath = ":noto-emoji-compat-flatbuffers",
             strategy = IncompatibilityStrategy.ExcludeProjectWithDependants
         ),
-//        Incompatibility(
-//            gradlePath = ":compose:ui:ui-tooling",
-//            strategy = IncompatibilityStrategy.ExcludeProjectWithDependants
-//        ),
-//        Incompatibility(
-//            gradlePath = ":compose:ui:ui-tooling-data",
-//            strategy = IncompatibilityStrategy.ExcludeProjectWithDependants
-//        ),
-//        Incompatibility(
-//            gradlePath = ":compose:ui:ui-tooling-preview",
-//            strategy = IncompatibilityStrategy.ExcludeProjectWithDependants
-//        ),
         // cannot build these
         Incompatibility(
             gradlePath = ":inspection:inspection",
@@ -60,25 +48,6 @@ object PlaygroundCompatibility {
                 module = "inspection"
             )
         ),
-        Incompatibility( // TODO: https://ge.androidx.dev/s/7yzb6oiykixgy
-            gradlePath = ":core:core",
-            strategy = IncompatibilityStrategy.Replace.WithPrebuilt(
-                group = "androidx.core",
-                module = "core"
-            )
-        ),
-//        Incompatibility(
-//            gradlePath = ":external:paparazzi:paparazzi",
-//            strategy = IncompatibilityStrategy.Replace.WithPublic(
-//                coordinates = "app.cash.paparazzi:paparazzi:1.2.0"
-//            )
-//        ),
-//        Incompatibility(
-//            gradlePath = ":external:paparazzi:paparazzi-agent",
-//            strategy = IncompatibilityStrategy.Replace.WithPublic(
-//                coordinates = "app.cash.paparazzi:paparazzi-agent:1.2.0"
-//            )
-//        ),
         Incompatibility(
             gradlePath = ":icing",
             strategy = IncompatibilityStrategy.ExcludeProjectWithDependants
@@ -91,14 +60,6 @@ object PlaygroundCompatibility {
             gradlePath = ":external:libyuv",
             strategy = IncompatibilityStrategy.ExcludeProjectWithDependants
         ),
-        //
-//    includeProject(":icing", new File(externalRoot, "icing"), [BuildType.MAIN])
-//    includeProject(":icing:nativeLib", new File(externalRoot, "icing/nativeLib"), [BuildType.MAIN])
-//    includeProject(":external:libyuv", [BuildType.CAMERA])
-//    includeProject(":noto-emoji-compat-font", new File(externalRoot, "noto-fonts/emoji-compat"), [BuildType.MAIN])
-//    includeProject(":noto-emoji-compat-flatbuffers", new File(externalRoot, "noto-fonts/emoji-compat-flatbuffers"), [BuildType.MAIN, BuildType.COMPOSE])
-//    includeProject(":external:paparazzi:paparazzi", [BuildType.COMPOSE])
-//    includeProject(":external:paparazzi:paparazzi-agent", [BuildType.COMPOSE])
     )
 
     fun findIncompatibility(

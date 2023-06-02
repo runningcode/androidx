@@ -213,11 +213,8 @@ fun Project.configureSbomPublishing() {
 
     project.configurations.create(sbomEmptyConfiguration)
     project.apply(plugin = "org.spdx.sbom")
-    val repos = if (ProjectLayoutType.isPlayground(this)) {
-        emptyMap()
-    } else {
-        getRepoPublicUrls()
-    }
+    val repos = getRepoPublicUrls()
+
     val gitsClient = MultiGitClient.create(project)
     val supportRootDir = getSupportRootFolder()
 
@@ -318,17 +315,26 @@ fun getGitRemoteUrl(dir: File, supportRootDir: File): String {
     }
     throw GradleException("Could not identify git remote url for project at $dir")
 }
+private val MAVEN_CENTRAL_REPO_URL = "https://repo.maven.apache.org/maven2"
 
 /**
  * Returns a mapping from local repo url to public repo url
  */
 fun Project.getRepoPublicUrls(): Map<String, String> {
-    return mapOf(
-        "file:${project.getPrebuiltsRoot()}/androidx/external"
-            to "https://repo.maven.apache.org/maven2",
-        "file:${project.getPrebuiltsRoot()}/androidx/internal"
-            to "https://dl.google.com/android/maven2"
-    )
+    if (ProjectLayoutType.isPlayground(this)) {
+        return mapOf(
+            "https://androidx.dev/storage/prebuilts"
+                to "https://dl.google.com/android/maven2",
+            MAVEN_CENTRAL_REPO_URL to "https://dl.google.com/android/maven2"
+        )
+    } else {
+        return mapOf(
+            "file:${project.getPrebuiltsRoot()}/androidx/external"
+                to MAVEN_CENTRAL_REPO_URL,
+            "file:${project.getPrebuiltsRoot()}/androidx/internal"
+                to "https://dl.google.com/android/maven2"
+        )
+    }
 }
 
 private fun Project.appliesShadowPlugin() =
