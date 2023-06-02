@@ -74,18 +74,21 @@ object PlaygroundCompatibility {
         val gradlePath: String,
         val strategy: IncompatibilityStrategy
     )
+
     sealed interface IncompatibilityStrategy {
         // any project that depends on this will be ignored in settings
         object ExcludeProjectWithDependants : IncompatibilityStrategy
+
         // we have a way to replace.
-        sealed interface Replace: IncompatibilityStrategy {
+        sealed interface Replace : IncompatibilityStrategy {
             data class WithPrebuilt(
                 val group: String,
                 val module: String
-            ): Replace
+            ) : Replace
+
             data class WithPublic(
                 val coordinates: String
-            ): Replace
+            ) : Replace
         }
     }
 }

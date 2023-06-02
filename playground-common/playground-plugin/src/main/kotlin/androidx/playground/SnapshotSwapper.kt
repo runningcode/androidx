@@ -16,12 +16,13 @@
 
 package androidx.playground
 
+import androidx.playground.PlaygroundCompatibility.IncompatibilityStrategy.Replace
 import groovy.xml.DOMBuilder
+import java.net.URL
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.artifacts.DependencyResolveDetails
 import org.gradle.api.attributes.Attribute
-import java.net.URL
 
 /**
  * Replaces dependencies on incompatible projects with their prebuilts.
@@ -40,25 +41,27 @@ class SnapshotSwapper(
         project: Project
     ) {
         val replacements = PlaygroundCompatibility.incompatibilities.mapNotNull {
-            when(val strategy = it.strategy) {
+            when (val strategy = it.strategy) {
                 PlaygroundCompatibility.IncompatibilityStrategy.ExcludeProjectWithDependants -> null
-                is PlaygroundCompatibility.IncompatibilityStrategy.Replace.WithPrebuilt -> {
+                is Replace.WithPrebuilt -> {
                     it.gradlePath to listOf(
                         strategy.group,
                         strategy.module,
                         findSnapshotVersion(strategy.group, strategy.module)
                     ).joinToString(":")
                 }
-                is PlaygroundCompatibility.IncompatibilityStrategy.Replace.WithPublic -> {
+
+                is Replace.WithPublic -> {
                     it.gradlePath to strategy.coordinates
                 }
             }
         }
     }
+
     fun swapIncompatibleProjectDependencies(
         project: Project
     ) {
-        if(true) return
+        if (true) return
 
         project.configurations.all { configuration ->
             val doLog = configuration.name == "debugUnitTestRuntimeClasspath"
@@ -69,14 +72,13 @@ class SnapshotSwapper(
                     val pathPrefix = requested.group.substringAfter(
                         "${project.rootProject.name}.",
                         missingDelimiterValue = ""
-                    ).replace(".",":")
+                    ).replace(".", ":")
                     if (pathPrefix != "") {
                         val projectPath = ":$pathPrefix:${requested.name}"
                         val incompatibility = findIncompatibility(projectPath)
                         if (incompatibility != null) {
                             applyReplacementStrategy(details, incompatibility)
                         }
-
                     }
                 }
             }
@@ -87,12 +89,12 @@ class SnapshotSwapper(
         details: DependencyResolveDetails,
         incompatibility: PlaygroundCompatibility.Incompatibility,
     ) {
-        when(val strategy = incompatibility.strategy) {
+        when (val strategy = incompatibility.strategy) {
             PlaygroundCompatibility.IncompatibilityStrategy.ExcludeProjectWithDependants -> {
                 error("we should've never included this project")
             }
 
-            is PlaygroundCompatibility.IncompatibilityStrategy.Replace.WithPrebuilt -> {
+            is Replace.WithPrebuilt -> {
                 val snapshotVersion = findSnapshotVersion(
                     group = strategy.group,
                     module = strategy.module
@@ -102,7 +104,7 @@ class SnapshotSwapper(
                 )
             }
 
-            is PlaygroundCompatibility.IncompatibilityStrategy.Replace.WithPublic -> {
+            is Replace.WithPublic -> {
                 details.useTarget(
                     strategy.coordinates
                 )
@@ -115,20 +117,23 @@ class SnapshotSwapper(
             it.gradlePath == projectPath
         }
     }
-    private fun artifactCoordinates(strategy: PlaygroundCompatibility.IncompatibilityStrategy.Replace): String {
-        return when(strategy) {
-            is PlaygroundCompatibility.IncompatibilityStrategy.Replace.WithPrebuilt -> {
+
+    private fun artifactCoordinates(strategy: Replace): String {
+        return when (strategy) {
+            is Replace.WithPrebuilt -> {
                 val version = findSnapshotVersion(
                     strategy.group,
                     strategy.module
                 )
                 return "${strategy.group}:${strategy.module}:$version"
             }
-            is PlaygroundCompatibility.IncompatibilityStrategy.Replace.WithPublic -> {
+
+            is Replace.WithPublic -> {
                 return strategy.coordinates
             }
         }
     }
+
     /**
      * Finds the snapshot version from the AndroidX snapshot repository.
      *
@@ -153,7 +158,8 @@ class SnapshotSwapper(
                 if (versionNodes.length != 1) {
                     throw GradleException(
                         "AndroidXPlaygroundRootImplPlugin#findSnapshotVersion expected exactly " +
-                                " one latest version in $metadataUrl, but got ${versionNodes.length}"
+                                " one latest version in $metadataUrl, " +
+                                "but got ${versionNodes.length}"
                     )
                 }
                 val snapshotVersion = versionNodes.item(0).textContent
@@ -176,9 +182,8 @@ class SnapshotSwapper(
                     createAttribute("com.android.build.api.attributes.AgpVersionAttr"),
                     "8.1.0-beta02"
                 )
-                //attribute(KotlinPlatformType.attribute, KotlinPlatformType.native)
             }
-            val strategy = (incompatibility.strategy as PlaygroundCompatibility.IncompatibilityStrategy.Replace)
+            val strategy = incompatibility.strategy as Replace
             configuration.dependencies.add(
                 project.dependencies.create(
                     artifactCoordinates(strategy)
@@ -200,8 +205,10 @@ class SnapshotSwapper(
         companion object {
             fun load(project: Project): PlaygroundProperties {
                 return PlaygroundProperties(
-                    snapshotBuildId = project.requireProperty("androidx.playground.snapshotBuildId"),
-                    metalavaBuildId = project.requireProperty("androidx.playground.metalavaBuildId"),
+                    snapshotBuildId = project
+                        .requireProperty("androidx.playground.snapshotBuildId"),
+                    metalavaBuildId = project
+                        .requireProperty("androidx.playground.metalavaBuildId"),
                 )
             }
 

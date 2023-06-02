@@ -17,13 +17,14 @@
 package androidx.playground
 
 import androidx.build.SettingsParser
+import androidx.playground.PlaygroundCompatibility.IncompatibilityStrategy.ExcludeProjectWithDependants
 import java.io.File
+import java.util.Locale
 import java.util.Properties
 import javax.inject.Inject
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.initialization.Settings
-import java.util.Locale
 
 open class PlaygroundExtension @Inject constructor(
     private val settings: Settings
@@ -69,7 +70,7 @@ open class PlaygroundExtension @Inject constructor(
         )
         settings.include(name)
         val incompatibility = PlaygroundCompatibility.findIncompatibility(name)
-        check(incompatibility?.strategy != PlaygroundCompatibility.IncompatibilityStrategy.ExcludeProjectWithDependants) {
+        check(incompatibility?.strategy != ExcludeProjectWithDependants) {
             "Cannot include $name because it is fully incompatible"
         }
         if (incompatibility != null) {
@@ -215,8 +216,11 @@ open class PlaygroundExtension @Inject constructor(
             it.versionCatalogs {
                 val libs = it.findByName("libs") ?: it.create("libs")
                 libs.apply {
-                        val os = System.getProperty("os.name").lowercase(Locale.US)
-                        val currentOsArtifact = if (os.contains("mac os x") ||  os.contains("darwin") || os.contains("osx")) {
+                    val os = System.getProperty("os.name").lowercase(Locale.US)
+                    val currentOsArtifact =
+                        if (os.contains("mac os x") ||
+                            os.contains("darwin") ||
+                            os.contains("osx")) {
                             val arch = System.getProperty("os.arch")
                             if (arch == "aarch64") {
                                 "skiko-awt-runtime-macos-arm64"
@@ -225,7 +229,7 @@ open class PlaygroundExtension @Inject constructor(
                             }
                         } else if (os.startsWith("win")) {
                             "skiko-awt-runtime-windows-x64"
-                        } else if (os.startsWith("linux") ) {
+                        } else if (os.startsWith("linux")) {
                             val arch = System.getProperty("os.arch")
                             if (arch == "aarch64") {
                                 "skiko-awt-runtime-linux-arm64"
@@ -235,9 +239,12 @@ open class PlaygroundExtension @Inject constructor(
                         } else {
                             throw GradleException("Unsupported operating system $os")
                         }
-                        library("skikoCurrentOs", "org.jetbrains.skiko", currentOsArtifact).versionRef("skiko")
-                    }
-
+                    library(
+                        "skikoCurrentOs",
+                        "org.jetbrains.skiko",
+                        currentOsArtifact
+                    ).versionRef("skiko")
+                }
             }
         }
     }
