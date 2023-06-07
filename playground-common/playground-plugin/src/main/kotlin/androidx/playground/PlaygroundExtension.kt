@@ -17,16 +17,40 @@
 package androidx.playground
 
 import androidx.build.SettingsParser
-import org.gradle.api.GradleException
-import org.gradle.api.initialization.Settings
 import java.io.File
 import java.util.Properties
 import javax.inject.Inject
+import org.gradle.api.GradleException
+import org.gradle.api.initialization.Settings
+import org.slf4j.LoggerFactory
 
+@Suppress("SyntheticAccessor")
 open class PlaygroundExtension @Inject constructor(
-    private val settings: Settings
+    private val settings: Settings,
 ) {
     private var supportRootDir: File? = null
+    private lateinit var snapshotSwapper: SnapshotSwapper
+    private val logger = LoggerFactory.getLogger("playgroundExtension")
+    private lateinit var repoConfig: PlaygroundRepositoryConfiguration
+
+    init {
+        settings.gradle.afterProject {
+            if (it.rootProject == it) {
+                repoConfig = PlaygroundRepositoryConfiguration(it)
+                snapshotSwapper = SnapshotSwapper(it, repoConfig)
+            }
+            repoConfig.configureRepositories(it)
+        }
+    }
+
+    private val projectSelection by lazy {
+        val supportRootDir = this@PlaygroundExtension.supportRootDir ?: error("""
+            Must call setupPlayground first to initialize
+        """.trimIndent())
+        val supportSettingsFile = File(supportRootDir, "settings.gradle")
+        val availableProjects = SettingsParser.findProjects(supportSettingsFile)
+        ProjectSelection(supportRootDir, availableProjects)
+    }
 
     /**
      * Includes the project if it does not already exist.
@@ -36,7 +60,11 @@ open class PlaygroundExtension @Inject constructor(
      * changes the project dir to avoid the conflict.
      * see b/197253160 for details.
      */
-    private fun includeFakeParentProjectIfNotExists(name: String, projectDir: File) {
+    private fun includeFakeParentProjectIfNotExists(
+        name: String,
+        projectDir: File,
+        fakeIfIncompatible: Boolean
+    ) {
         if (name.isEmpty()) return
         if (settings.findProject(name) != null) {
             return
@@ -48,35 +76,54 @@ open class PlaygroundExtension @Inject constructor(
         } else {
             projectDir
         }
-        includeProjectAt(name, actualProjectDir)
+        includeProjectAt(name, actualProjectDir, fakeIfIncompatible)
         // Set it to a gradle file that does not exist.
         // We must always include projects starting with root, if we are including nested projects.
         settings.project(name).buildFileName = "ignored.gradle"
     }
 
-    private fun includeProjectAt(name: String, projectDir: File) {
+    private fun includeProjectAt(name: String, projectDir: File, fakeIfIncompatible: Boolean) {
         if (settings.findProject(name) != null) {
             throw GradleException("Cannot include project twice: $name is already included.")
         }
+        logger.info("including project $name at $projectDir.")
         val parentPath = name.substring(0, name.lastIndexOf(":"))
         val parentDir = projectDir.parentFile
         // Make sure parent is created first. see: b/197253160 for details
         includeFakeParentProjectIfNotExists(
             parentPath,
-            parentDir
+            parentDir,
+            fakeIfIncompatible
         )
         settings.include(name)
-        settings.project(name).projectDir = projectDir
+        val incompatibility = PlaygroundCompatibility.findIncompatibility(name).takeIf {
+            fakeIfIncompatible
+        }
+        if (incompatibility != null) {
+            logger.info("creating a fake project for $name from prebuilts")
+            settings.project(name).buildFileName = "ignored.gradle"
+            settings.gradle.afterProject {
+                if (it.path == name) {
+                    snapshotSwapper.configureFakeProject(
+                        project = it,
+                        incompatibility = incompatibility
+                    )
+                }
+            }
+        } else {
+            settings.project(name).projectDir = projectDir
+        }
     }
 
     /**
      * Includes a project by name, with a path relative to the root of AndroidX.
      */
-    fun includeProject(name: String, filePath: String) {
+    fun includeProject(name: String, filePath: String, fakeIfIncompatible: Boolean) {
         if (supportRootDir == null) {
             throw GradleException("Must call setupPlayground() first.")
         }
-        includeProjectAt(name, File(supportRootDir, filePath))
+        includeProjectAt(name, File(supportRootDir, filePath),
+            fakeIfIncompatible = fakeIfIncompatible)
     }
 
     /**
@@ -85,7 +132,11 @@ open class PlaygroundExtension @Inject constructor(
      *
      * @param relativePathToRoot The relative path of the project to the root AndroidX project
      */
-    fun setupPlayground(relativePathToRoot: String) {
+    @JvmOverloads
+    fun setupPlayground(
+        relativePathToRoot: String,
+        block: (ProjectSelectionScope.() -> Unit)? = null
+    ) {
         // gradlePluginPortal has a variety of unsigned binaries that have proper signatures
         // in mavenCentral, so don't use gradlePluginPortal() if you can avoid it
         settings.pluginManagement.repositories {
@@ -124,16 +175,41 @@ open class PlaygroundExtension @Inject constructor(
 
         settings.rootProject.buildFileName = relativePathToBuild
 
-        includeProject(":lint-checks", "lint-checks")
-        includeProject(":lint-checks:integration-tests", "lint-checks/integration-tests")
-        includeProject(":internal-testutils-common", "testutils/testutils-common")
-        includeProject(":internal-testutils-gradle-plugin", "testutils/testutils-gradle-plugin")
+        REQUIRED_PROJECTS.forEach {
+            projectSelection.addProject(
+                projectSelection.requireProject(it),
+                includeDependencies = true
+            )
+        }
 
         // allow public repositories
         System.setProperty("ALLOW_PUBLIC_REPOS", "true")
 
         // specify out dir location
         System.setProperty("CHECKOUT_ROOT", supportRoot.path)
+        if (block != null) {
+            selectProjects(block)
+            projectSelection.finalize().forEach {
+                includeProject(it.gradlePath, it.filePath, fakeIfIncompatible = true)
+            }
+        }
+    }
+
+    private fun selectProjects(block : ProjectSelectionScope.() -> Unit) {
+        val scope = object : ProjectSelectionScope {
+            override fun includeProjectsWithPrefix(prefix: String) {
+                val matching = projectSelection.allProjectsInSettings.filter {
+                    it.gradlePath.startsWith(prefix)
+                }
+                check (matching.isNotEmpty()) {
+                    "No projects matched prefix $prefix"
+                }
+                matching.forEach {
+                    projectSelection.addProject(it, includeDependencies = true)
+                }
+            }
+        }
+        scope.block()
     }
 
     /**
@@ -143,14 +219,13 @@ open class PlaygroundExtension @Inject constructor(
      *               If filter returns true, it will be included in the build.
      */
     fun selectProjectsFromAndroidX(filter: (String) -> Boolean) {
-        if (supportRootDir == null) {
-            throw RuntimeException("Must call setupPlayground() first.")
-        }
-        val supportSettingsFile = File(supportRootDir, "settings.gradle")
-        SettingsParser.findProjects(supportSettingsFile).filter {
+        projectSelection.allProjectsInSettings.filter {
             filter(it.gradlePath)
-        }.forEach { (projectGradlePath, projectFilePath) ->
-            includeProject(projectGradlePath, projectFilePath)
+        }.forEach { includedProject ->
+            projectSelection.addProject(includedProject, includeDependencies = false)
+        }
+        projectSelection.finalize().forEach {
+            includeProject(it.gradlePath, it.filePath, fakeIfIncompatible = false)
         }
     }
 
@@ -166,4 +241,19 @@ open class PlaygroundExtension @Inject constructor(
         if (name == ":test:screenshot:screenshot-proto") return true
         return false
     }
+
+    companion object {
+        private val REQUIRED_PROJECTS = setOf(
+            ":lint-checks",
+            ":lint-checks:integration-tests",
+            ":internal-testutils-common",
+            ":internal-testutils-gradle-plugin"
+        )
+    }
+}
+
+interface ProjectSelectionScope {
+    fun includeProjectsWithPrefix(
+        prefix: String
+    )
 }
