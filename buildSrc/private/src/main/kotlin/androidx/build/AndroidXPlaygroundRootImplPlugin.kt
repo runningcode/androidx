@@ -53,7 +53,7 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
             PLAYGROUND_SNAPSHOT_BUILD_ID
         )?.toString() ?: error("Cannot find $PLAYGROUND_SNAPSHOT_BUILD_ID in project")
         snapshotRepoUrl = "https://androidx.dev/snapshots/builds/" +
-            "${snapshotBuildId}/artifacts/repository"
+            "$snapshotBuildId/artifacts/repository"
         GradleTransformWorkaround.maybeApply(rootProject)
         rootProject.subprojects {
             configureSubProject(it)
@@ -80,9 +80,7 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
      * not need to access the network.
      */
     private fun findSnapshotVersion(group: String, module: String): String {
-        val snapshotVersionCache = rootProject.buildDir.resolve(
-            "snapshot-version-cache/${snapshotBuildId}"
-        )
+        val snapshotVersionCache = rootProject.buildDir.resolve("snapshot-version-cache/$snapshotBuildId")
         val groupPath = group.replace('.', '/')
         val modulePath = module.replace('.', '/')
         val metadataCacheFile = snapshotVersionCache.resolve("$groupPath/$modulePath/version.txt")
