@@ -32,14 +32,12 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
     private lateinit var rootProject: Project
 
     /**
-     * List of snapshot repositories to fetch AndroidX artifacts
+     * Maven url for the snapshots repository. It will be used to find snapshot versions
+     * of modules that are included via `projectOrArtifact`.
      */
-    private lateinit var repos: PlaygroundRepositories
+    private lateinit var snapshotRepoUrl: String
 
-    /**
-     * The configuration for the plugin read from the gradle properties
-     */
-    private lateinit var config: PlaygroundProperties
+    private lateinit var snapshotBuildId: String
 
     override fun apply(target: Project) {
         if (!target.isRoot) {
@@ -51,8 +49,11 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
             )
         }
         rootProject = target
-        config = PlaygroundProperties.load(rootProject)
-        repos = PlaygroundRepositories(config)
+        snapshotBuildId = target.findProperty(
+            PLAYGROUND_SNAPSHOT_BUILD_ID
+        )?.toString() ?: error("Cannot find $PLAYGROUND_SNAPSHOT_BUILD_ID in project")
+        snapshotRepoUrl = "https://androidx.dev/snapshots/builds/" +
+            "${snapshotBuildId}/artifacts/repository"
         GradleTransformWorkaround.maybeApply(rootProject)
         rootProject.subprojects {
             configureSubProject(it)
@@ -80,7 +81,7 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
      */
     private fun findSnapshotVersion(group: String, module: String): String {
         val snapshotVersionCache = rootProject.buildDir.resolve(
-            "snapshot-version-cache/${config.snapshotBuildId}"
+            "snapshot-version-cache/${snapshotBuildId}"
         )
         val groupPath = group.replace('.', '/')
         val modulePath = module.replace('.', '/')
@@ -88,7 +89,7 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
         return if (metadataCacheFile.exists()) {
             metadataCacheFile.readText(Charsets.UTF_8)
         } else {
-            val metadataUrl = "${repos.snapshots.url}/$groupPath/$modulePath/maven-metadata.xml"
+            val metadataUrl = "$snapshotRepoUrl/$groupPath/$modulePath/maven-metadata.xml"
             URL(metadataUrl).openStream().use {
                 val parsedMetadata = DOMBuilder.parse(it.reader())
                 val versionNodes = parsedMetadata.getElementsByTagName("latest")
@@ -102,41 +103,6 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
                 metadataCacheFile.parentFile.mkdirs()
                 metadataCacheFile.writeText(snapshotVersion, Charsets.UTF_8)
                 snapshotVersion
-            }
-        }
-    }
-
-    private class PlaygroundRepositories(
-        props: PlaygroundProperties
-    ) {
-        val snapshots = PlaygroundRepository(
-            "https://androidx.dev/snapshots/builds/${props.snapshotBuildId}/artifacts/repository",
-            includeGroupRegex = """androidx\..*"""
-        )
-    }
-
-    private data class PlaygroundRepository(
-        val url: String,
-        val includeGroupRegex: String,
-        val includeModuleRegex: String? = null
-    )
-
-    private data class PlaygroundProperties(
-        val snapshotBuildId: String,
-        val metalavaBuildId: String,
-    ) {
-        companion object {
-            fun load(project: Project): PlaygroundProperties {
-                return PlaygroundProperties(
-                    snapshotBuildId = project.requireProperty(PLAYGROUND_SNAPSHOT_BUILD_ID),
-                    metalavaBuildId = project.requireProperty(PLAYGROUND_METALAVA_BUILD_ID),
-                )
-            }
-
-            private fun Project.requireProperty(name: String): String {
-                return checkNotNull(findProperty(name)) {
-                    "missing $name property. It must be defined in the gradle.properties file"
-                }.toString()
             }
         }
     }
@@ -178,6 +144,7 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
                 throw GradleException("projectOrArtifact cannot find/replace project $path")
             }
         }
+
         const val SNAPSHOT_MARKER = "REPLACE_WITH_SNAPSHOT"
         const val INTERNAL_PREBUILTS_REPO_URL =
             "https://androidx.dev/storage/prebuilts/androidx/internal/repository"

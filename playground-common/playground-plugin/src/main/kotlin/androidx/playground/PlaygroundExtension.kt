@@ -34,9 +34,8 @@ open class PlaygroundExtension @Inject constructor(
     private lateinit var repoConfig: PlaygroundRepositoryConfiguration
 
     init {
-        settings.gradle.afterProject {
+        settings.gradle.beforeProject {
             if (it.rootProject == it) {
-                repoConfig = PlaygroundRepositoryConfiguration(it)
                 snapshotSwapper = SnapshotSwapper(it, repoConfig)
             }
             repoConfig.configureRepositories(it)
@@ -169,6 +168,7 @@ open class PlaygroundExtension @Inject constructor(
         val playgroundProperties = Properties()
         val propertiesFile = File(supportRoot, "playground-common/playground.properties")
         playgroundProperties.load(propertiesFile.inputStream())
+        repoConfig = PlaygroundRepositoryConfiguration(playgroundProperties)
         settings.gradle.beforeProject { project ->
             // load playground properties. These are not kept in the playground projects to prevent
             // AndroidX build from reading them.

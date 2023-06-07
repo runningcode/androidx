@@ -17,14 +17,14 @@
 package androidx.playground
 
 import java.net.URI
+import java.util.Properties
 import org.gradle.api.Project
 import org.gradle.api.artifacts.dsl.RepositoryHandler
 
 class PlaygroundRepositoryConfiguration(
-    rootProject: Project
+    properties: Properties
 ) {
-    private val config = PlaygroundProperties.load(rootProject)
-
+    private val config = PlaygroundProperties(properties)
     val snapshotBuildId
         get() = config.snapshotBuildId
 
@@ -35,6 +35,7 @@ class PlaygroundRepositoryConfiguration(
 
     fun configureRepositories(project: Project) {
         // configure repositories
+        println("configuring repositories for ${project.path}")
         project.repositories.addPlaygroundRepositories()
     }
 
@@ -66,22 +67,11 @@ class PlaygroundRepositoryConfiguration(
         val snapshotBuildId: String,
         val metalavaBuildId: String,
     ) {
-        companion object {
-            fun load(project: Project): PlaygroundProperties {
-                return PlaygroundProperties(
-                    snapshotBuildId = project
-                        .requireProperty("androidx.playground.snapshotBuildId"),
-                    metalavaBuildId = project
-                        .requireProperty("androidx.playground.metalavaBuildId"),
-                )
-            }
 
-            private fun Project.requireProperty(name: String): String {
-                return checkNotNull(findProperty(name)) {
-                    "missing $name property. It must be defined in the gradle.properties file"
-                }.toString()
-            }
-        }
+        constructor(properties: Properties) : this(
+            snapshotBuildId = properties.getProperty("androidx.playground.snapshotBuildId"),
+            metalavaBuildId = properties.getProperty("androidx.playground.metalavaBuildId")
+        )
     }
 
     data class PlaygroundRepository(
