@@ -18,12 +18,10 @@ package androidx.build
 
 import androidx.build.gradle.isRoot
 import groovy.xml.DOMBuilder
-import java.net.URI
 import java.net.URL
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.artifacts.dsl.RepositoryHandler
 
 /**
  * This plugin is used in Playground projects and adds functionality like resolving to snapshot
@@ -55,7 +53,6 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
         rootProject = target
         config = PlaygroundProperties.load(rootProject)
         repos = PlaygroundRepositories(config)
-        rootProject.repositories.addPlaygroundRepositories()
         GradleTransformWorkaround.maybeApply(rootProject)
         rootProject.subprojects {
             configureSubProject(it)
@@ -63,7 +60,6 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
     }
 
     private fun configureSubProject(project: Project) {
-        project.repositories.addPlaygroundRepositories()
         project.configurations.all { configuration ->
             configuration.resolutionStrategy.eachDependency { details ->
                 val requested = details.requested
@@ -110,56 +106,13 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
         }
     }
 
-    private fun RepositoryHandler.addPlaygroundRepositories() {
-        repos.all.forEach { playgroundRepository ->
-            maven { repository ->
-                repository.url = URI(playgroundRepository.url)
-                repository.metadataSources {
-                    it.mavenPom()
-                    it.artifact()
-                }
-                repository.content {
-                    it.includeGroupByRegex(playgroundRepository.includeGroupRegex)
-                    if (playgroundRepository.includeModuleRegex != null) {
-                        it.includeModuleByRegex(
-                            playgroundRepository.includeGroupRegex,
-                            playgroundRepository.includeModuleRegex
-                        )
-                    }
-                }
-            }
-        }
-        google()
-        mavenCentral()
-        gradlePluginPortal()
-    }
-
     private class PlaygroundRepositories(
         props: PlaygroundProperties
     ) {
-        val sonatypeSnapshot = PlaygroundRepository(
-            url = "https://oss.sonatype.org/content/repositories/snapshots",
-            includeGroupRegex = """com\.pinterest.*""",
-            includeModuleRegex = """ktlint.*"""
-        )
         val snapshots = PlaygroundRepository(
             "https://androidx.dev/snapshots/builds/${props.snapshotBuildId}/artifacts/repository",
             includeGroupRegex = """androidx\..*"""
         )
-        val metalava = PlaygroundRepository(
-            "https://androidx.dev/metalava/builds/${props.metalavaBuildId}/artifacts" +
-                "/repo/m2repository",
-            includeGroupRegex = """com\.android\.tools\.metalava"""
-        )
-        val prebuilts = PlaygroundRepository(
-            INTERNAL_PREBUILTS_REPO_URL,
-            includeGroupRegex = """androidx\..*"""
-        )
-        val dokka = PlaygroundRepository(
-            "https://maven.pkg.jetbrains.space/kotlin/p/dokka/dev",
-            includeGroupRegex = """org\.jetbrains\.dokka"""
-        )
-        val all = listOf(sonatypeSnapshot, snapshots, metalava, dokka, prebuilts)
     }
 
     private data class PlaygroundRepository(

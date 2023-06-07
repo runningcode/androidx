@@ -70,7 +70,7 @@ class SnapshotSwapper(
      */
     private fun findSnapshotVersion(group: String, module: String): String {
         val snapshotVersionCache = rootProject.buildDir.resolve(
-            "snapshot-version-cache${config.snapshotBuildId}"
+            "snapshot-version-cache-buildPlugin-${config.snapshotBuildId}"
         )
         val groupPath = group.replace('.', '/')
         val modulePath = module.replace('.', '/')
