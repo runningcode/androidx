@@ -44,9 +44,11 @@ open class PlaygroundExtension @Inject constructor(
     }
 
     private val projectSelection by lazy {
-        val supportRootDir = this@PlaygroundExtension.supportRootDir ?: error("""
+        val supportRootDir = this@PlaygroundExtension.supportRootDir ?: error(
+            """
             Must call setupPlayground first to initialize
-        """.trimIndent())
+        """.trimIndent()
+        )
         val supportSettingsFile = File(supportRootDir, "settings.gradle")
         val availableProjects = SettingsParser.findProjects(supportSettingsFile)
         ProjectSelection(supportRootDir, availableProjects)
@@ -122,8 +124,10 @@ open class PlaygroundExtension @Inject constructor(
         if (supportRootDir == null) {
             throw GradleException("Must call setupPlayground() first.")
         }
-        includeProjectAt(name, File(supportRootDir, filePath),
-            fakeIfIncompatible = fakeIfIncompatible)
+        includeProjectAt(
+            name, File(supportRootDir, filePath),
+            fakeIfIncompatible = fakeIfIncompatible
+        )
     }
 
     /**
@@ -195,13 +199,13 @@ open class PlaygroundExtension @Inject constructor(
         }
     }
 
-    private fun selectProjects(block : ProjectSelectionScope.() -> Unit) {
+    private fun selectProjects(block: ProjectSelectionScope.() -> Unit) {
         val scope = object : ProjectSelectionScope {
             override fun includeProjectsWithPrefix(prefix: String) {
                 val matching = projectSelection.allProjectsInSettings.filter {
                     it.gradlePath.startsWith(prefix)
                 }
-                check (matching.isNotEmpty()) {
+                check(matching.isNotEmpty()) {
                     "No projects matched prefix $prefix"
                 }
                 matching.forEach {
