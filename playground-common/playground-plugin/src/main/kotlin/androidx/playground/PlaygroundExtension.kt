@@ -227,7 +227,9 @@ open class PlaygroundExtension @Inject constructor(
                 }
                 if (enableOnCi && project.plugins.hasPlugin("AndroidXPlugin")) {
                     it.dependsOn(project.tasks.named(BUILD_ON_SERVER_TASK))
-                    it.dependsOn(project.tasks.named("test"))
+                    project.tasks.findByName("test")?.let { testTask ->
+                        it.dependsOn(testTask)
+                    }
                 }
             }
         }
