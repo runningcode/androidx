@@ -225,7 +225,7 @@ open class PlaygroundExtension @Inject constructor(
                     ciTargetProjects.any { it.gradlePath == project.path } -> true
                     else -> false
                 }
-                if (enableOnCi) {
+                if (enableOnCi && project.plugins.hasPlugin("AndroidXPlugin")) {
                     it.dependsOn(project.tasks.named(BUILD_ON_SERVER_TASK))
                 }
             }
