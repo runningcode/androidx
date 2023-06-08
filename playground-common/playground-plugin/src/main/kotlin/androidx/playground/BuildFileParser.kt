@@ -82,7 +82,7 @@ class BuildFileParser(
 
     companion object {
         private val projectReferencePattern = Pattern.compile(
-            "project" +
+            "(project|projectOrArtifact)" +
                 "\\((path: )?[\"'](?<name>\\S*)[\"'](, configuration: .*)?\\)"
         )
         private val multilineProjectReference = Pattern.compile("project\\(\$")

@@ -25,12 +25,7 @@ plugins {
 rootProject.name = "work-playground"
 
 playground {
-    setupPlayground("..")
-    selectProjectsFromAndroidX({ name ->
-        if (name == ":work:work-inspection") return false
-        if (name.startsWith(":work")) return true
-        if (name.startsWith(":internal-testutils-runtime")) return true
-        if (name == ":inspection:inspection-gradle-plugin") return true
-        return false
-    })
+    setupPlayground("..") {
+        it.includeProjectsWithPrefix(":work")
+    }
 }
