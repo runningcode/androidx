@@ -44,6 +44,12 @@ open class PlaygroundExtension @Inject constructor(
         settings.gradle.beforeProject {
             if (it.rootProject == it) {
                 snapshotSwapper = SnapshotSwapper(it, repoConfig)
+                it.extensions.extraProperties.set(
+                    "ciTargetProjects",
+                    ciTargetProjects.map {
+                        it.gradlePath
+                    }
+                )
             }
             repoConfig.configureRepositories(it)
         }

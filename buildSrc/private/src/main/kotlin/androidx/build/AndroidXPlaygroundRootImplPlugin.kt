@@ -39,6 +39,8 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
 
     private lateinit var snapshotBuildId: String
 
+    private lateinit var ciTargetProjectPaths: Set<String>
+
     override fun apply(target: Project) {
         if (!target.isRoot) {
             throw GradleException("This plugin should only be applied to root project")
@@ -49,6 +51,10 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
             )
         }
         rootProject = target
+        @Suppress("UNCHECKED_CAST")
+        ciTargetProjectPaths = (target.extensions.extraProperties.get(
+            "ciTargetProjects"
+        ) as List<String>).toSet()
         snapshotBuildId = target.findProperty(
             PLAYGROUND_SNAPSHOT_BUILD_ID
         )?.toString() ?: error("Cannot find $PLAYGROUND_SNAPSHOT_BUILD_ID in project")
@@ -59,6 +65,8 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
             configureSubProject(it)
         }
     }
+
+    fun shouldBuildOnCi(project: Project) = project.path in ciTargetProjectPaths
 
     private fun configureSubProject(project: Project) {
         project.configurations.all { configuration ->
@@ -107,6 +115,16 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
     }
 
     companion object {
+        fun shouldBuildTestsOnGithubCi(project: Project): Boolean {
+            check(ProjectLayoutType.isPlayground(project)) {
+                "Should not call this method outside playground projects"
+            }
+            val plugin: AndroidXPlaygroundRootImplPlugin = project.rootProject.plugins.getPlugin(
+                AndroidXPlaygroundRootImplPlugin::class.java
+            )
+            return plugin.shouldBuildOnCi(project)
+        }
+
         /**
          * Returns a `project` if exists or the latest artifact coordinates if it doesn't.
          *

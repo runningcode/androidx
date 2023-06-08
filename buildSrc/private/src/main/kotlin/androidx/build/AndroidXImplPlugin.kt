@@ -698,7 +698,13 @@ class AndroidXImplPlugin @Inject constructor(
             }
         }
 
-        project.configureTestConfigGeneration(this)
+        val createZipTestConfiguration = when {
+            !ProjectLayoutType.isPlayground(project) -> true
+            else -> AndroidXPlaygroundRootImplPlugin.shouldBuildTestsOnGithubCi(project)
+        }
+        if (createZipTestConfiguration) {
+            project.configureTestConfigGeneration(this)
+        }
         project.configureFtlRunner()
 
         // AGP warns if we use project.buildDir (or subdirs) for CMake's generated
