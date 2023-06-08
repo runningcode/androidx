@@ -30,7 +30,7 @@ playground {
         if (name == ":work:work-inspection") return false
         if (name.startsWith(":work")) return true
         if (name.startsWith(":internal-testutils-runtime")) return true
+        if (name == ":inspection:inspection-gradle-plugin") return true
         return false
     })
-    includeProject(":inspection:inspection-gradle-plugin", "inspection/inspection-gradle-plugin")
 }
