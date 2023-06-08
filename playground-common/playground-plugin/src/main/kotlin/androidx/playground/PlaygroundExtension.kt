@@ -178,7 +178,7 @@ open class PlaygroundExtension @Inject constructor(
         }
 
         settings.rootProject.buildFileName = relativePathToBuild
-
+        SkikoSetup.setupSkiko(settings)
         REQUIRED_PROJECTS.forEach {
             projectSelection.addProject(
                 projectSelection.requireProject(it),

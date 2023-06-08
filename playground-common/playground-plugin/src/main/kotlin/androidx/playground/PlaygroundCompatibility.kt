@@ -42,6 +42,14 @@ object PlaygroundCompatibility {
             )
         ),
         Incompatibility(
+            gradlePath = ":tracing:tracing-perfetto",
+            strategy = IncompatibilityStrategy.Replace.WithPrebuilt(
+                group = "androidx.tracing",
+                module = "tracing-perfetto"
+            )
+        ),
+        // cannot build these
+        Incompatibility(
             gradlePath = ":noto-emoji-compat-font",
             strategy = IncompatibilityStrategy.ExcludeProjectWithDependants
         ),
@@ -49,7 +57,6 @@ object PlaygroundCompatibility {
             gradlePath = ":noto-emoji-compat-flatbuffers",
             strategy = IncompatibilityStrategy.ExcludeProjectWithDependants
         ),
-        // cannot build these
         Incompatibility(
             gradlePath = ":inspection:inspection",
             strategy = IncompatibilityStrategy.Replace.WithPrebuilt(
