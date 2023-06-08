@@ -23,6 +23,7 @@ import javax.inject.Inject
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.initialization.Settings
+import org.gradle.api.tasks.testing.Test
 import org.slf4j.LoggerFactory
 
 @Suppress("SyntheticAccessor")
@@ -227,6 +228,7 @@ open class PlaygroundExtension @Inject constructor(
                 }
                 if (enableOnCi && project.plugins.hasPlugin("AndroidXPlugin")) {
                     it.dependsOn(project.tasks.named(BUILD_ON_SERVER_TASK))
+                    it.dependsOn(project.tasks.named("test"))
                 }
             }
         }
