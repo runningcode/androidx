@@ -90,7 +90,7 @@ open class PlaygroundExtension @Inject constructor(
         includeProjectAt(name, actualProjectDir, fakeIfIncompatible)
         // Set it to a gradle file that does not exist.
         // We must always include projects starting with root, if we are including nested projects.
-        settings.project(name).buildFileName = "ignored.gradle"
+        settings.project(name).buildFileName = FAKE_PROJECT_GRADLE_FILE_NAME
     }
 
     private fun includeProjectAt(name: String, projectDir: File, fakeIfIncompatible: Boolean) {
@@ -112,7 +112,7 @@ open class PlaygroundExtension @Inject constructor(
         }
         if (incompatibility != null) {
             logger.info("creating a fake project for $name from prebuilts")
-            settings.project(name).buildFileName = "ignored.gradle"
+            settings.project(name).buildFileName = FAKE_PROJECT_GRADLE_FILE_NAME
             settings.gradle.afterProject {
                 if (it.path == name) {
                     snapshotSwapper.configureFakeProject(
@@ -219,8 +219,13 @@ open class PlaygroundExtension @Inject constructor(
             }
         } else {
             project.tasks.register(PLAYGROUND_BUILD_ON_SERVER_TASK) {
-                if (ciTargetProjects.isEmpty() ||
-                    ciTargetProjects.any { it.gradlePath == project.path }) {
+                val enableOnCi = when {
+                    project.buildFile.name == FAKE_PROJECT_GRADLE_FILE_NAME -> false
+                    ciTargetProjects.isEmpty() -> true
+                    ciTargetProjects.any { it.gradlePath == project.path } -> true
+                    else -> false
+                }
+                if (enableOnCi) {
                     it.dependsOn(project.tasks.named(BUILD_ON_SERVER_TASK))
                 }
             }
@@ -278,6 +283,7 @@ open class PlaygroundExtension @Inject constructor(
     companion object {
         private const val PLAYGROUND_BUILD_ON_SERVER_TASK = "playgroundBuildOnServer"
         private const val BUILD_ON_SERVER_TASK = "buildOnServer"
+        private const val FAKE_PROJECT_GRADLE_FILE_NAME = "ignored.gradle"
         private val REQUIRED_PROJECTS = setOf(
             ":lint-checks",
             ":internal-testutils-common",
