@@ -249,7 +249,6 @@ open class PlaygroundExtension @Inject constructor(
     companion object {
         private val REQUIRED_PROJECTS = setOf(
             ":lint-checks",
-            ":lint-checks:integration-tests",
             ":internal-testutils-common",
             ":internal-testutils-gradle-plugin"
         )
