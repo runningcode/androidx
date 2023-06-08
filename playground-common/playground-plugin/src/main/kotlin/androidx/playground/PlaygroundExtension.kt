@@ -21,6 +21,7 @@ import java.io.File
 import java.util.Properties
 import javax.inject.Inject
 import org.gradle.api.GradleException
+import org.gradle.api.Project
 import org.gradle.api.initialization.Settings
 import org.slf4j.LoggerFactory
 
@@ -33,12 +34,21 @@ open class PlaygroundExtension @Inject constructor(
     private val logger = LoggerFactory.getLogger("playgroundExtension")
     private lateinit var repoConfig: PlaygroundRepositoryConfiguration
 
+    /**
+     * Projects that should be built on CI.
+     * playgrundBuildOnServer task will only run these
+     */
+    private val ciTargetProjects = mutableSetOf<SettingsParser.IncludedProject>()
+
     init {
         settings.gradle.beforeProject {
             if (it.rootProject == it) {
                 snapshotSwapper = SnapshotSwapper(it, repoConfig)
             }
             repoConfig.configureRepositories(it)
+        }
+        settings.gradle.afterProject {
+            configurePlaygroundBuildOnServer(it)
         }
     }
 
@@ -191,10 +201,28 @@ open class PlaygroundExtension @Inject constructor(
 
         // specify out dir location
         System.setProperty("CHECKOUT_ROOT", supportRoot.path)
+
         if (block != null) {
             selectProjects(block)
             projectSelection.finalize().forEach {
                 includeProject(it.gradlePath, it.filePath, fakeIfIncompatible = true)
+            }
+        }
+    }
+
+    private fun configurePlaygroundBuildOnServer(
+        project: Project
+    ) {
+        if (project.rootProject == project) {
+            project.tasks.register(PLAYGROUND_BUILD_ON_SERVER_TASK) {
+                it.dependsOn(project.tasks.named(BUILD_ON_SERVER_TASK))
+            }
+        } else {
+            project.tasks.register(PLAYGROUND_BUILD_ON_SERVER_TASK) {
+                if (ciTargetProjects.isEmpty() ||
+                    ciTargetProjects.any { it.gradlePath == project.path }) {
+                    it.dependsOn(project.tasks.named(BUILD_ON_SERVER_TASK))
+                }
             }
         }
     }
@@ -208,6 +236,7 @@ open class PlaygroundExtension @Inject constructor(
                 check(matching.isNotEmpty()) {
                     "No projects matched prefix $prefix"
                 }
+                ciTargetProjects.addAll(matching)
                 matching.forEach {
                     projectSelection.addProject(it, includeDependencies = true)
                 }
@@ -247,6 +276,8 @@ open class PlaygroundExtension @Inject constructor(
     }
 
     companion object {
+        private const val PLAYGROUND_BUILD_ON_SERVER_TASK = "playgroundBuildOnServer"
+        private const val BUILD_ON_SERVER_TASK = "buildOnServer"
         private val REQUIRED_PROJECTS = setOf(
             ":lint-checks",
             ":internal-testutils-common",
