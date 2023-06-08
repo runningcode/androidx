@@ -23,7 +23,6 @@ import javax.inject.Inject
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.initialization.Settings
-import org.gradle.api.tasks.testing.Test
 import org.slf4j.LoggerFactory
 
 @Suppress("SyntheticAccessor")
