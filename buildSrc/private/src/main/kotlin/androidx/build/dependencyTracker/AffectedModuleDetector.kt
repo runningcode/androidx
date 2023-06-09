@@ -134,7 +134,6 @@ abstract class AffectedModuleDetector(
             val logger = FileLogger(outputFile)
             logger.info("setup: enabled: $enabled")
             if (!enabled) {
-                if (true) error("why is this not enabled?")
                 val provider = setupWithParams(
                     rootProject,
                     { spec ->

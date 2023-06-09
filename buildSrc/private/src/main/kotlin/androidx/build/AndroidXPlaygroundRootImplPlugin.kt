@@ -16,7 +16,6 @@
 
 package androidx.build
 
-import androidx.build.dependencyTracker.AffectedModuleDetector
 import androidx.build.gradle.isRoot
 import groovy.xml.DOMBuilder
 import java.net.URL
@@ -97,14 +96,6 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
                 if (requested.version == SNAPSHOT_MARKER) {
                     val snapshotVersion = findSnapshotVersion(requested.group, requested.name)
                     details.useVersion(snapshotVersion)
-                }
-            }
-        }
-        if (!ciTargetProjects.isNullOrEmpty()) {
-            project.plugins.withType(AndroidXImplPlugin::class.java) {
-                // add a task guard for BuildOnServer
-                project.tasks.named(BUILD_ON_SERVER_TASK).configure {
-                    AffectedModuleDetector.configureTaskGuard(it)
                 }
             }
         }
