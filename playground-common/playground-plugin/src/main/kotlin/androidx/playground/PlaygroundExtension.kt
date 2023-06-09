@@ -233,7 +233,10 @@ open class PlaygroundExtension @Inject constructor(
                 }
                 if (enableOnCi && project.plugins.hasPlugin("AndroidXPlugin")) {
                     it.dependsOn(project.tasks.named(BUILD_ON_SERVER_TASK))
-                    project.tasks.findByName("test")?.let { testTask ->
+                    kotlin.runCatching {
+                        // is this a good way to avoid triggering task creation ?
+                        project.tasks.named("test")
+                    }.getOrNull()?.let { testTask ->
                         it.dependsOn(testTask)
                     }
                 }

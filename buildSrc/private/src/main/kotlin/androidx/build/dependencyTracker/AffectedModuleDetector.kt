@@ -16,6 +16,8 @@
 
 package androidx.build.dependencyTracker
 
+import androidx.build.AndroidXPlaygroundRootImplPlugin
+import androidx.build.ProjectLayoutType
 import androidx.build.dependencyTracker.AffectedModuleDetector.Companion.ENABLE_ARG
 import androidx.build.getCheckoutRoot
 import androidx.build.getDistributionDirectory
@@ -132,6 +134,7 @@ abstract class AffectedModuleDetector(
             val logger = FileLogger(outputFile)
             logger.info("setup: enabled: $enabled")
             if (!enabled) {
+                if (true) error("why is this not enabled?")
                 val provider = setupWithParams(
                     rootProject,
                     { spec ->
@@ -141,6 +144,20 @@ abstract class AffectedModuleDetector(
                     }
                 )
                 logger.info("using AcceptAll")
+                instance.wrapped = provider
+                return
+            }
+            if (ProjectLayoutType.isPlayground(rootProject)) {
+                val provider = setupWithParams(
+                    rootProject
+                ) { spec ->
+                    val params = spec.parameters
+                    params.targetProjects = AndroidXPlaygroundRootImplPlugin.getTargetProjectPaths(
+                        rootProject
+                    )
+                    params.log = logger
+                }
+                logger.info("using explicit target projects")
                 instance.wrapped = provider
                 return
             }
@@ -269,12 +286,18 @@ abstract class AffectedModuleDetectorLoader :
         var baseCommitOverride: String?
         var changeInfoPath: Provider<String>
         var manifestPath: Provider<String>
+        var targetProjects: Set<String>?
     }
 
     val detector: AffectedModuleDetector by lazy {
         val logger = parameters.log!!
         if (parameters.acceptAll) {
             AcceptAll(null)
+        } else if (parameters.targetProjects != null) {
+            GithubPlayground(
+                targetProjectPaths = parameters.targetProjects!!,
+                logger = logger.toLogger()
+            )
         } else {
             val baseCommitOverride = parameters.baseCommitOverride
             if (baseCommitOverride != null) {
@@ -325,6 +348,27 @@ private class AcceptAll(
 
     override fun getSubset(projectPath: String): ProjectSubset {
         logger?.info("[AcceptAll] AcceptAll.getSubset returning CHANGED_PROJECTS")
+        return ProjectSubset.CHANGED_PROJECTS
+    }
+}
+
+/**
+ * Implementation that accepts projects only in the current Github target.
+ */
+private class GithubPlayground(
+    private val targetProjectPaths: Set<String>,
+    logger: Logger? = null
+) : AffectedModuleDetector(logger) {
+    init {
+        check(targetProjectPaths.isNotEmpty()) {
+            "Github should provide the list of target projects"
+        }
+    }
+    override fun shouldInclude(project: String): Boolean {
+        return (project in targetProjectPaths)
+    }
+
+    override fun getSubset(projectPath: String): ProjectSubset {
         return ProjectSubset.CHANGED_PROJECTS
     }
 }

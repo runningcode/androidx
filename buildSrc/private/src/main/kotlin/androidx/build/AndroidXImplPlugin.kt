@@ -84,7 +84,6 @@ import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.extra
 import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.getByType
-import org.gradle.kotlin.dsl.register
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinBasePluginWrapper
@@ -698,13 +697,7 @@ class AndroidXImplPlugin @Inject constructor(
             }
         }
 
-        val createZipTestConfiguration = when {
-            !ProjectLayoutType.isPlayground(project) -> true
-            else -> AndroidXPlaygroundRootImplPlugin.shouldBuildTestsOnGithubCi(project)
-        }
-        if (createZipTestConfiguration) {
-            project.configureTestConfigGeneration(this)
-        }
+        project.configureTestConfigGeneration(this)
         project.configureFtlRunner()
 
         // AGP warns if we use project.buildDir (or subdirs) for CMake's generated

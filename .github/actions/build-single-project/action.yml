@@ -71,4 +71,4 @@ runs:
         GRADLE_ENTERPRISE_ACCESS_KEY: ${{ inputs.gradle-enterprise-access-key }}
       working-directory: ${{ inputs.project-root }}
       shell: bash
-      run: ./gradlew playgroundBuildOnServer zipTestConfigsWithApks ${{ inputs.gradle-flags }}
+      run: ./gradlew playgroundBuildOnServer zipTestConfigsWithApks -Pandroidx.enableAffectedModuleDetection=true ${{ inputs.gradle-flags }}

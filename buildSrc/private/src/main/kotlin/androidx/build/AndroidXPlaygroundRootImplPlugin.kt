@@ -16,6 +16,7 @@
 
 package androidx.build
 
+import androidx.build.dependencyTracker.AffectedModuleDetector
 import androidx.build.gradle.isRoot
 import groovy.xml.DOMBuilder
 import java.net.URL
@@ -39,8 +40,6 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
 
     private lateinit var snapshotBuildId: String
 
-    private lateinit var ciTargetProjectPaths: Set<String>
-
     override fun apply(target: Project) {
         if (!target.isRoot) {
             throw GradleException("This plugin should only be applied to root project")
@@ -52,29 +51,33 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
         }
         rootProject = target
         @Suppress("UNCHECKED_CAST")
-        ciTargetProjectPaths = (target.extensions.extraProperties.get(
-            "ciTargetProjects"
-        ) as List<String>).toSet()
         snapshotBuildId = target.findProperty(
             PLAYGROUND_SNAPSHOT_BUILD_ID
         )?.toString() ?: error("Cannot find $PLAYGROUND_SNAPSHOT_BUILD_ID in project")
         snapshotRepoUrl = "https://androidx.dev/snapshots/builds/" +
             "$snapshotBuildId/artifacts/repository"
         GradleTransformWorkaround.maybeApply(rootProject)
+        val ciTargetProjects = getTargetProjectPaths(target)
         rootProject.subprojects {
-            configureSubProject(it)
+            configureSubProject(it, ciTargetProjects)
         }
     }
 
-    fun shouldBuildOnCi(project: Project) = project.path in ciTargetProjectPaths
-
-    private fun configureSubProject(project: Project) {
+    private fun configureSubProject(project: Project, ciTargetProjects: Set<String>?) {
         project.configurations.all { configuration ->
             configuration.resolutionStrategy.eachDependency { details ->
                 val requested = details.requested
                 if (requested.version == SNAPSHOT_MARKER) {
                     val snapshotVersion = findSnapshotVersion(requested.group, requested.name)
                     details.useVersion(snapshotVersion)
+                }
+            }
+        }
+        if (!ciTargetProjects.isNullOrEmpty()) {
+            project.plugins.withType(AndroidXImplPlugin::class.java) {
+                // add a task guard for BuildOnServer
+                project.tasks.named(BUILD_ON_SERVER_TASK).configure {
+                    AffectedModuleDetector.configureTaskGuard(it)
                 }
             }
         }
@@ -115,16 +118,16 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
     }
 
     companion object {
-        fun shouldBuildTestsOnGithubCi(project: Project): Boolean {
+        fun getTargetProjectPaths(project: Project): Set<String>? {
             check(ProjectLayoutType.isPlayground(project)) {
                 "Should not call this method outside playground projects"
             }
-            val plugin: AndroidXPlaygroundRootImplPlugin = project.rootProject.plugins.getPlugin(
-                AndroidXPlaygroundRootImplPlugin::class.java
-            )
-            return plugin.shouldBuildOnCi(project)
-        }
+            @Suppress("UNCHECKED_CAST")
+            return (project.rootProject.extensions.extraProperties.get(
+                "ciTargetProjects"
+            ) as? List<String>)?.toSet()
 
+        }
         /**
          * Returns a `project` if exists or the latest artifact coordinates if it doesn't.
          *
