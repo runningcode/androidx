@@ -58,7 +58,7 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
         GradleTransformWorkaround.maybeApply(rootProject)
         val ciTargetProjects = getTargetProjectPaths(target)
         rootProject.subprojects {
-            configureSubProject(it, ciTargetProjects)
+            configureSubProject(it)
         }
         createPlaygroundBuildOnServer(rootProject, ciTargetProjects)
     }
@@ -89,7 +89,7 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
         }
     }
 
-    private fun configureSubProject(project: Project, ciTargetProjects: Set<String>?) {
+    private fun configureSubProject(project: Project) {
         project.configurations.all { configuration ->
             configuration.resolutionStrategy.eachDependency { details ->
                 val requested = details.requested
