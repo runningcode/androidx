@@ -61,6 +61,33 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
         rootProject.subprojects {
             configureSubProject(it, ciTargetProjects)
         }
+        createPlaygroundBuildOnServer(rootProject, ciTargetProjects)
+    }
+
+    private fun createPlaygroundBuildOnServer(
+        rootProject: Project,
+        ciTargetProjects: Set<String>?
+    ) {
+        rootProject.tasks.register(PLAYGROUND_BUILD_ON_SERVER_TASK) {
+            it.dependsOn(rootProject.tasks.named(BUILD_ON_SERVER_TASK))
+        }
+        rootProject.subprojects { subProject ->
+            subProject.plugins.withType(AndroidXImplPlugin::class.java) {
+                subProject.tasks.register(PLAYGROUND_BUILD_ON_SERVER_TASK) {
+                    val enableOnCi = ciTargetProjects.isNullOrEmpty() ||
+                        ciTargetProjects.contains(subProject.path)
+                    if (enableOnCi) {
+                        it.dependsOn(subProject.tasks.named(BUILD_ON_SERVER_TASK))
+                        kotlin.runCatching {
+                            // is this a good way to avoid triggering task creation ?
+                            subProject.tasks.named("test")
+                        }.getOrNull()?.let { testTask ->
+                            it.dependsOn(testTask)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun configureSubProject(project: Project, ciTargetProjects: Set<String>?) {
@@ -128,6 +155,7 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
             ) as? List<String>)?.toSet()
 
         }
+
         /**
          * Returns a `project` if exists or the latest artifact coordinates if it doesn't.
          *
@@ -168,5 +196,8 @@ class AndroidXPlaygroundRootImplPlugin : Plugin<Project> {
         const val SNAPSHOT_MARKER = "REPLACE_WITH_SNAPSHOT"
         const val INTERNAL_PREBUILTS_REPO_URL =
             "https://androidx.dev/storage/prebuilts/androidx/internal/repository"
+
+        // build on server task for playground that only depends on BUILD_ON_SERVER task
+        private const val PLAYGROUND_BUILD_ON_SERVER_TASK = "playgroundBuildOnServer"
     }
 }

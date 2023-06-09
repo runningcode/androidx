@@ -21,7 +21,6 @@ import java.io.File
 import java.util.Properties
 import javax.inject.Inject
 import org.gradle.api.GradleException
-import org.gradle.api.Project
 import org.gradle.api.initialization.Settings
 import org.slf4j.LoggerFactory
 
@@ -52,9 +51,6 @@ open class PlaygroundExtension @Inject constructor(
                 )
             }
             repoConfig.configureRepositories(it)
-        }
-        settings.gradle.afterProject {
-            configurePlaygroundBuildOnServer(it)
         }
     }
 
@@ -216,34 +212,6 @@ open class PlaygroundExtension @Inject constructor(
         }
     }
 
-    private fun configurePlaygroundBuildOnServer(
-        project: Project
-    ) {
-        if (project.rootProject == project) {
-            project.tasks.register(PLAYGROUND_BUILD_ON_SERVER_TASK) {
-                it.dependsOn(project.tasks.named(BUILD_ON_SERVER_TASK))
-            }
-        } else {
-            project.tasks.register(PLAYGROUND_BUILD_ON_SERVER_TASK) {
-                val enableOnCi = when {
-                    project.buildFile.name == FAKE_PROJECT_GRADLE_FILE_NAME -> false
-                    ciTargetProjects.isEmpty() -> true
-                    ciTargetProjects.any { it.gradlePath == project.path } -> true
-                    else -> false
-                }
-                if (enableOnCi && project.plugins.hasPlugin("AndroidXPlugin")) {
-                    it.dependsOn(project.tasks.named(BUILD_ON_SERVER_TASK))
-                    kotlin.runCatching {
-                        // is this a good way to avoid triggering task creation ?
-                        project.tasks.named("test")
-                    }.getOrNull()?.let { testTask ->
-                        it.dependsOn(testTask)
-                    }
-                }
-            }
-        }
-    }
-
     private fun selectProjects(block: ProjectSelectionScope.() -> Unit) {
         val scope = object : ProjectSelectionScope {
             override fun includeProjectsWithPrefix(prefix: String) {
@@ -293,7 +261,6 @@ open class PlaygroundExtension @Inject constructor(
     }
 
     companion object {
-        private const val PLAYGROUND_BUILD_ON_SERVER_TASK = "playgroundBuildOnServer"
         private const val BUILD_ON_SERVER_TASK = "buildOnServer"
         private const val FAKE_PROJECT_GRADLE_FILE_NAME = "ignored.gradle"
         private val REQUIRED_PROJECTS = setOf(
