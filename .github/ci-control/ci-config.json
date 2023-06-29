@@ -14,7 +14,8 @@
     "main" : {
         "exclude" : [
           "compose-runtime",
-          "room"
+          "appcompat",
+          "core"
         ],
         "default": true
     }
