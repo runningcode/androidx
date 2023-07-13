@@ -39,12 +39,7 @@ jobs:
         # If you would like to remove some projects temporarily, use .github/ci-control/ci-config.json instead.
         # Keep these in alphabetical order.
         project: ["native-cache-repro-project"]
-        include:
-          - project: "compose-runtime"
-            project-root: "compose/runtime"
-          - project: "native-cache-repro-project"
-            custom-os: "macos-latest"
-    runs-on: ${{ matrix.custom-os || matrix.os }}
+    runs-on: macos-latest
     needs: [setup]
     env:
       artifact-id: ${{matrix.project}}
