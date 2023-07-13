@@ -99,7 +99,7 @@ jobs:
 
           # Limit the size of the cache entry.
           # These directories contain instrumented/transformed dependency jars which can be reconstructed relatively quickly.
-          gradle-home-cache-excludes: | 
+          gradle-home-cache-excludes: |
             caches/jars-9
             caches/transforms-3
 
@@ -116,11 +116,11 @@ jobs:
         os: [ubuntu-latest]
         # If you would like to remove some projects temporarily, use .github/ci-control/ci-config.json instead.
         # Keep these in alphabetical order.
-        project: ["activity", "appcompat", "biometric", "collection", "compose-runtime", "core", "datastore", "fragment", "lifecycle", "navigation", "paging", "room", "work"]
+        project: ["native-cache-repro-project"]
         include:
           - project: "compose-runtime"
             project-root: "compose/runtime"
-          - project: "collection"
+          - project: "native-cache-repro-project"
             custom-os: "macos-latest"
     runs-on: ${{ matrix.custom-os || matrix.os }}
     needs: [setup, lint]
