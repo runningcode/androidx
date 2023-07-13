@@ -45,7 +45,7 @@ jobs:
           - project: "native-cache-repro-project"
             custom-os: "macos-latest"
     runs-on: ${{ matrix.custom-os || matrix.os }}
-    needs: [setup, lint]
+    needs: [setup]
     env:
       artifact-id: ${{matrix.project}}
       project-root: ${{matrix.project-root || matrix.project}}
