@@ -71,4 +71,4 @@ runs:
         GRADLE_ENTERPRISE_ACCESS_KEY: ${{ inputs.gradle-enterprise-access-key }}
       working-directory: ${{ inputs.project-root }}
       shell: bash
-      run: ./gradlew buildOnServer zipTestConfigsWithApks test ${{ inputs.gradle-flags }}
+      run: ./gradlew allTests ${{ inputs.gradle-flags }}
