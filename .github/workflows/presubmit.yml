@@ -10,7 +10,7 @@ env:
   GRADLE_BUILD_ACTION_CACHE_KEY_PREFIX: "2022.07.23"
 jobs:
   setup:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     outputs:
       gradlew_flags: ${{ steps.global-constants.outputs.gradlew_flags }}
     steps:
@@ -35,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [macos-latest]
         # If you would like to remove some projects temporarily, use .github/ci-control/ci-config.json instead.
         # Keep these in alphabetical order.
         project: ["native-cache-repro-project"]
