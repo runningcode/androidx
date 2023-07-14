@@ -44,6 +44,12 @@ playground {
         if (name == ":internal-testutils-truth") return true
         // others
         if (name == ":compose:lint:internal-lint-checks") return true
+        // collections
+        if (name.startsWith(":collection")) return true
+        if (name == ":benchmark:benchmark-darwin") return true
+        if (name == ":benchmark:benchmark-darwin-core") return true
+        if (name == ":internal-testutils-truth") return true
+        if (name.startsWith(":annotation")) return true
         return false
     })
 }
