@@ -22,12 +22,15 @@ import java.awt.Point
 import java.awt.im.InputMethodRequests
 import kotlinx.coroutines.awaitCancellation
 
+@AllowDifferentMembersInActual
 internal actual interface PlatformComponent : PlatformInputComponent, PlatformComponentWithCursor
 
+@AllowDifferentMembersInActual
 internal actual interface PlatformComponentWithCursor {
     var componentCursor: Cursor
 }
 
+@AllowDifferentMembersInActual
 internal actual object DummyPlatformComponent : PlatformComponent {
     override var componentCursor: Cursor = Cursor(Cursor.CROSSHAIR_CURSOR)
     var enabledInput: InputMethodRequests? = null

@@ -24,6 +24,7 @@ import android.view.inputmethod.InputConnection
  * Represents a request to open an Android text input session via
  * `PlatformTextInputSession.startInputMethod`.
  */
+@AllowDifferentMembersInActual
 actual fun interface PlatformTextInputMethodRequest {
 
     /**

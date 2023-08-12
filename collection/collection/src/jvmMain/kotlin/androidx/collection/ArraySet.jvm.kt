@@ -43,19 +43,17 @@ import androidx.collection.internal.EMPTY_OBJECTS
  * @constructor Creates a new empty ArraySet. The default capacity of an array map is 0, and
  * will grow once items are added to it.
  */
-public actual class ArraySet<E>
-// TODO(b/237405792): Default value for optional argument is required here to workaround Metalava's
-//  lack of support for expect / actual.
-@Suppress("ACTUAL_FUNCTION_WITH_DEFAULT_ARGUMENTS")
-// TODO(b/237405286): @JvmOverloads is redundant in this actual, but is necessary here to workaround
-//  Metalava's lack of support for expect / actual.
-@JvmOverloads actual constructor(capacity: Int = 0) : MutableCollection<E>, MutableSet<E> {
+public actual class ArraySet<E> actual constructor(
+    capacity: Int
+) : MutableCollection<E>, MutableSet<E> {
     internal actual var hashes: IntArray = EMPTY_INTS
     internal actual var array: Array<Any?> = EMPTY_OBJECTS
 
     internal actual var _size = 0
     actual override val size: Int
         get() = _size
+
+    public constructor() : this(0)
 
     /**
      * Create a new ArraySet with the mappings from the given ArraySet.

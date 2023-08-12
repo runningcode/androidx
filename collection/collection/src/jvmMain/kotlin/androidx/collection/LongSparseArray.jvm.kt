@@ -48,6 +48,7 @@ import androidx.collection.internal.idealLongArraySize
  * capacity of 0, the sparse array will be initialized with a light-weight representation not
  * requiring any additional array allocations.
  */
+@AllowDifferentMembersInActual // Cloneable is JVM specific
 public actual open class LongSparseArray<E>
 
 // TODO(b/237405792): Default value for optional argument is required here to workaround Metalava's

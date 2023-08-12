@@ -57,6 +57,7 @@ import androidx.collection.internal.idealIntArraySize
  * 0, the sparse array will be initialized with a light-weight representation not requiring any
  * additional array allocations. Default initialCapacity is 10.
  */
+@AllowDifferentMembersInActual // Cloneable is JVM specific
 public actual open class SparseArrayCompat<E>
 // TODO(b/237405792): Default value for optional argument is required here to workaround Metalava's
 //  lack of support for expect / actual.

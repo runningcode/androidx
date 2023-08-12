@@ -23,10 +23,13 @@ import org.jetbrains.kotlin.descriptors.MemberDescriptor
 import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI
 import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrConstructor
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
 import org.jetbrains.kotlin.ir.declarations.IrEnumEntry
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrProperty
+import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.expressions.IrExpressionBody
@@ -45,6 +48,7 @@ import org.jetbrains.kotlin.ir.util.DeepCopySymbolRemapper
 import org.jetbrains.kotlin.ir.util.DeepCopyTypeRemapper
 import org.jetbrains.kotlin.ir.util.hasAnnotation
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
+import org.jetbrains.kotlin.ir.util.referenceClassifier
 import org.jetbrains.kotlin.ir.util.referenceFunction
 import org.jetbrains.kotlin.ir.visitors.IrElementTransformerVoid
 import org.jetbrains.kotlin.ir.visitors.acceptVoid
@@ -125,13 +129,19 @@ class CopyDefaultValuesFromExpectLowering(
         symbolTable.referenceFunction(descriptor.findActualForExpect()).owner as T
 
     private fun IrProperty.findActualForExpected(): IrProperty =
-        symbolTable.referenceProperty(descriptor.findActualForExpect()).owner
+        symbolTable.descriptorExtension.referenceProperty(
+            descriptor.findActualForExpect()
+        ).owner
 
     private fun IrClass.findActualForExpected(): IrClass =
-        symbolTable.referenceClass(descriptor.findActualForExpect()).owner
+        symbolTable.descriptorExtension.referenceClass(
+            descriptor.findActualForExpect()
+        ).owner
 
     private fun IrEnumEntry.findActualForExpected(): IrEnumEntry =
-        symbolTable.referenceEnumEntry(descriptor.findActualForExpect()).owner
+        symbolTable.descriptorExtension.referenceEnumEntry(
+            descriptor.findActualForExpect()
+        ).owner
 
     private inline fun <reified T : MemberDescriptor> T.findActualForExpect(): T {
         if (!this.isExpect) error(this)

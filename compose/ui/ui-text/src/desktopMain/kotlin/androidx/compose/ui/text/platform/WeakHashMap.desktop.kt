@@ -15,6 +15,5 @@
  */
 package androidx.compose.ui.text.platform
 
-// Suppressing the diagnostics caused by https://youtrack.jetbrains.com/issue/KT-37316
-@Suppress("ACTUAL_WITHOUT_EXPECT")
+@AllowDifferentMembersInActual
 internal actual typealias WeakHashMap<K, V> = java.util.WeakHashMap<K, V>

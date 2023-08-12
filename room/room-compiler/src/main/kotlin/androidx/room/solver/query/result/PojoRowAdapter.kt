@@ -41,7 +41,7 @@ class PojoRowAdapter(
     val pojo: Pojo,
     out: XType
 ) : QueryMappedRowAdapter(out) {
-    override val mapping: PojoMapping
+    final override val mapping: PojoMapping
     val relationCollectors: List<RelationCollector>
 
     private val indexAdapter: PojoIndexAdapter

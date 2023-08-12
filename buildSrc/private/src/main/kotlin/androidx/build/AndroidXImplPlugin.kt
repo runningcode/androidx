@@ -381,20 +381,23 @@ constructor(private val componentFactory: SoftwareComponentFactory) : Plugin<Pro
         project.configureKtfmt()
 
         project.afterEvaluate {
+            val targetJvm = if (extension.type == LibraryType.COMPILER_PLUGIN) {
+                VERSION_11
+            } else if (
+                extension.type.compilationTarget == CompilationTarget.HOST &&
+                extension.type != LibraryType.ANNOTATION_PROCESSOR_UTILS
+            ) {
+                VERSION_17
+            } else {
+                VERSION_1_8
+            }
+
             project.tasks.withType(KotlinCompile::class.java).configureEach { task ->
-                if (extension.type == LibraryType.COMPILER_PLUGIN) {
-                    task.kotlinOptions.jvmTarget = "11"
-                } else if (
-                    extension.type.compilationTarget == CompilationTarget.HOST &&
-                        extension.type != LibraryType.ANNOTATION_PROCESSOR_UTILS
-                ) {
-                    task.kotlinOptions.jvmTarget = "17"
-                } else {
-                    task.kotlinOptions.jvmTarget = "1.8"
-                }
+                task.kotlinOptions.jvmTarget = targetJvm.toString()
                 val kotlinCompilerArgs =
                     mutableListOf(
                         "-Xskip-metadata-version-check",
+                        "-Xexpect-actual-classes"
                     )
                 // TODO (b/259578592): enable -Xjvm-default=all for camera-camera2-pipe projects
                 if (!project.name.contains("camera-camera2-pipe")) {
@@ -431,12 +434,17 @@ constructor(private val componentFactory: SoftwareComponentFactory) : Plugin<Pro
                     task.kotlinOptions.freeCompilerArgs += listOf("-Xexplicit-api=strict")
                 }
             }
+
+            project.tasks.withType(JavaCompile::class.java).configureEach {
+                it.sourceCompatibility = targetJvm.majorVersion
+                it.targetCompatibility = targetJvm.majorVersion
+            }
         }
         if (plugin is KotlinMultiplatformPluginWrapper) {
             project.configureKonanDirectory()
             project.extensions.findByType<LibraryExtension>()?.apply {
                 configureAndroidLibraryWithMultiplatformPluginOptions()
-            }
+            } ?: configureWithJavaPlugin(project, extension) // fixme: https://youtrack.jetbrains.com/issue/KT-59595
             project.configureKmpTests()
             project.configureSourceJarForMultiplatform()
 
@@ -635,7 +643,10 @@ constructor(private val componentFactory: SoftwareComponentFactory) : Plugin<Pro
     }
 
     private fun configureWithJavaPlugin(project: Project, extension: AndroidXExtension) {
-        project.configureErrorProneForJava()
+        if (project.plugins.hasPlugin(JavaPlugin::class.java)) {
+            // fixme: https://youtrack.jetbrains.com/issue/KT-59595
+            project.configureErrorProneForJava()
+        }
 
         // Force Java 1.8 source- and target-compatibility for all Java libraries.
         val javaExtension = project.extensions.getByType<JavaPluginExtension>()
