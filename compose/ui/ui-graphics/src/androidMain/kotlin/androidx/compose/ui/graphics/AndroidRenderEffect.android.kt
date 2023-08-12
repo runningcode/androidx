@@ -27,6 +27,7 @@ import androidx.compose.ui.geometry.Offset
 fun android.graphics.RenderEffect.asComposeRenderEffect(): RenderEffect =
     AndroidRenderEffect(this)
 
+@AllowDifferentMembersInActual
 @Immutable
 actual sealed class RenderEffect {
 

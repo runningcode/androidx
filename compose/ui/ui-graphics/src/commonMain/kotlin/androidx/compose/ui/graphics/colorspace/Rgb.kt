@@ -271,8 +271,8 @@ internal constructor(
         eotfOrig(x.coerceIn(min.toDouble(), max.toDouble()))
     }
 
-    override val isWideGamut: Boolean
-    override val isSrgb: Boolean
+    final override val isWideGamut: Boolean
+    final override val isSrgb: Boolean
 
     init {
         if (primaries.size != 6 && primaries.size != 9) {

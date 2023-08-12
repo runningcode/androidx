@@ -24,4 +24,4 @@ ARTIFACTS_TO_DOWNLOAD+="org.jetbrains.kotlin:kotlin-bom:$KOTLIN_VERSION,"
 ./development/importMaven/importMaven.sh --allow-jetbrains-dev "$ARTIFACTS_TO_DOWNLOAD"
 
 # Import konan binaries
-./development/importMaven/importMaven.sh import-konan-binaries --konan-compiler-version "$KOTLIN_VERSION"
+./development/importMaven/importMaven.sh --allow-jetbrains-dev import-konan-binaries --konan-compiler-version "$KOTLIN_VERSION"

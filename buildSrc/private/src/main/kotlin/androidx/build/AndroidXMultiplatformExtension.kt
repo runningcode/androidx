@@ -26,7 +26,6 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
-import org.jetbrains.kotlin.gradle.plugin.KotlinTargetPreset
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinAndroidTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithHostTests
@@ -109,9 +108,6 @@ open class AndroidXMultiplatformExtension(val project: Project) {
             }
             field = value
         }
-
-    val presets: NamedDomainObjectCollection<KotlinTargetPreset<*>>
-        get() = kotlinExtension.presets
 
     val targets: NamedDomainObjectCollection<KotlinTarget>
         get() = kotlinExtension.targets

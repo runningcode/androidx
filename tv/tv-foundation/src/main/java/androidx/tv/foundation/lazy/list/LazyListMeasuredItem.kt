@@ -58,7 +58,7 @@ internal class LazyListMeasuredItem @ExperimentalTvFoundationApi constructor(
     /**
      * Sum of the main axis sizes of all the inner placeables.
      */
-    override val size: Int
+    final override val size: Int
 
     /**
      * Sum of the main axis sizes of all the inner placeables and [spacing].

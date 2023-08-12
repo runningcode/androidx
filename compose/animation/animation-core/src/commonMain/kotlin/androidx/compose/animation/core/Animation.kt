@@ -311,7 +311,7 @@ class DecayAnimation<T, V : AnimationVector> /*@VisibleForTesting*/ constructor(
         animationSpec.getTargetValue(initialValueVector, initialVelocityVector)
     )
     @get:Suppress("MethodNameUnits")
-    override val durationNanos: Long
+    final override val durationNanos: Long
 
     // DecayAnimation finishes by design
     override val isInfinite: Boolean = false

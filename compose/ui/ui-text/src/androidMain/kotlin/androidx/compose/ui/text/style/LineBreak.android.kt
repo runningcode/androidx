@@ -17,6 +17,7 @@
 package androidx.compose.ui.text.style
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.text.style.LineBreak.Strategy
 import androidx.compose.ui.text.style.LineBreak.Strictness
 import androidx.compose.ui.text.style.LineBreak.WordBreak
@@ -103,6 +104,7 @@ actual value class LineBreak private constructor(
          * +---------+
          * </pre>
          */
+        @Stable
         actual val Simple: LineBreak = LineBreak(
             strategy = Strategy.Simple,
             strictness = Strictness.Normal,
@@ -127,6 +129,7 @@ actual value class LineBreak private constructor(
          * +---------+
          * </pre>
          */
+        @Stable
         actual val Heading: LineBreak = LineBreak(
             strategy = Strategy.Balanced,
             strictness = Strictness.Loose,
@@ -151,6 +154,7 @@ actual value class LineBreak private constructor(
          * +---------+
          * </pre>
          */
+        @Stable
         actual val Paragraph: LineBreak = LineBreak(
             strategy = Strategy.HighQuality,
             strictness = Strictness.Strict,
