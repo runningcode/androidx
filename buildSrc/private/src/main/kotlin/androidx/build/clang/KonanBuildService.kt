@@ -29,6 +29,7 @@ import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import org.gradle.process.ExecOperations
 import org.gradle.process.ExecSpec
+import org.jetbrains.kotlin.gradle.plugin.KotlinPluginWrapper
 import org.jetbrains.kotlin.gradle.utils.NativeCompilerDownloader
 import org.jetbrains.kotlin.konan.target.Distribution
 import org.jetbrains.kotlin.konan.target.LinkerOutputKind
@@ -216,6 +217,9 @@ abstract class KonanBuildService @Inject constructor(
         fun obtain(
             project: Project
         ): Provider<KonanBuildService> {
+            if (!project.plugins.hasPlugin(KotlinPluginWrapper::class.java)) {
+                project.pluginManager.apply(KotlinPluginWrapper::class.java)
+            }
             return project.gradle.sharedServices.registerIfAbsent(
                 KEY,
                 KonanBuildService::class.java

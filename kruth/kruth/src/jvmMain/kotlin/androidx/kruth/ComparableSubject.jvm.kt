@@ -24,6 +24,7 @@ import com.google.common.collect.Range
  *
  * @param T the type of the object being tested by this [ComparableSubject]
  */
+@OptIn(ExperimentalMultiplatform::class)
 actual open class ComparableSubject<T : Comparable<T>> internal actual constructor(
     actual: T?,
     metadata: FailureMetadata,

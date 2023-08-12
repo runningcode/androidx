@@ -148,6 +148,9 @@ val DONT_TRY_RERUNNING_TASKS =
 
         // https://github.com/spdx/spdx-gradle-plugin/issues/18
         "spdxSbomForRelease",
+
+        // Not cacheable by design, no outputs
+        "checkKotlinGradlePluginConfigurationErrors"
     )
 
 val DONT_TRY_RERUNNING_TASK_TYPES =

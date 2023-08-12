@@ -20,6 +20,7 @@ import androidx.benchmark.gradle.BenchmarkPlugin
 import androidx.build.AndroidXImplPlugin.Companion.TASK_TIMEOUT_MINUTES
 import androidx.build.Release.DEFAULT_PUBLISH_CONFIG
 import androidx.build.buildInfo.addCreateLibraryBuildInfoFileTasks
+import androidx.build.checkapi.ApiTaskConfig
 import androidx.build.checkapi.JavaApiTaskConfig
 import androidx.build.checkapi.KmpApiTaskConfig
 import androidx.build.checkapi.LibraryApiTaskConfig
@@ -384,20 +385,28 @@ constructor(private val componentFactory: SoftwareComponentFactory) : Plugin<Pro
         project.configureKtfmt()
 
         project.afterEvaluate {
+            val targetJvm = if (extension.type == LibraryType.COMPILER_PLUGIN) {
+                VERSION_11
+            } else if (
+                extension.type.compilationTarget == CompilationTarget.HOST &&
+                extension.type != LibraryType.ANNOTATION_PROCESSOR_UTILS
+            ) {
+                VERSION_17
+            } else {
+                VERSION_1_8
+            }
+
+            project.tasks.withType(KotlinNativeCompile::class.java).configureEach { task ->
+                task.kotlinOptions.freeCompilerArgs += "-Xexpect-actual-classes"
+            }
+
             project.tasks.withType(KotlinCompile::class.java).configureEach { task ->
-                if (extension.type == LibraryType.COMPILER_PLUGIN) {
-                    task.kotlinOptions.jvmTarget = "11"
-                } else if (
-                    extension.type.compilationTarget == CompilationTarget.HOST &&
-                        extension.type != LibraryType.ANNOTATION_PROCESSOR_UTILS
-                ) {
-                    task.kotlinOptions.jvmTarget = "17"
-                } else {
-                    task.kotlinOptions.jvmTarget = "1.8"
-                }
+                task.kotlinOptions.jvmTarget = targetJvm.toString()
+
                 val kotlinCompilerArgs =
                     mutableListOf(
                         "-Xskip-metadata-version-check",
+                        "-Xexpect-actual-classes"
                     )
                 // TODO (b/259578592): enable -Xjvm-default=all for camera-camera2-pipe projects
                 if (!project.name.contains("camera-camera2-pipe")) {
@@ -434,11 +443,19 @@ constructor(private val componentFactory: SoftwareComponentFactory) : Plugin<Pro
                     task.kotlinOptions.freeCompilerArgs += listOf("-Xexplicit-api=strict")
                 }
             }
+
+            project.tasks.withType(JavaCompile::class.java).configureEach {
+                it.sourceCompatibility = targetJvm.majorVersion
+                it.targetCompatibility = targetJvm.majorVersion
+            }
         }
         if (plugin is KotlinMultiplatformPluginWrapper) {
             project.configureKonanDirectory()
-            project.extensions.findByType<LibraryExtension>()?.apply {
-                configureAndroidLibraryWithMultiplatformPluginOptions()
+            val libraryExtension = project.extensions.findByType<LibraryExtension>()
+            if (libraryExtension != null) {
+                libraryExtension.configureAndroidLibraryWithMultiplatformPluginOptions()
+            } else {
+                project.configureCommonJvmTasks(KmpApiTaskConfig, extension)
             }
             project.configureKmpTests()
             project.configureSourceJarForMultiplatform()
@@ -693,6 +710,14 @@ constructor(private val componentFactory: SoftwareComponentFactory) : Plugin<Pro
             } else {
                 JavaApiTaskConfig
             }
+
+        project.configureCommonJvmTasks(apiTaskConfig, extension)
+    }
+
+    private fun Project.configureCommonJvmTasks(
+        apiTaskConfig: ApiTaskConfig,
+        extension: AndroidXExtension
+    ) {
         project.configureProjectForApiTasks(apiTaskConfig, extension)
 
         project.afterEvaluate {
@@ -707,7 +732,17 @@ constructor(private val componentFactory: SoftwareComponentFactory) : Plugin<Pro
             configuration.resolutionStrategy.preferProjectModules()
         }
 
-        project.addToBuildOnServer("jar")
+        if (project.multiplatformExtension == null) {
+            project.addToBuildOnServer("jar")
+        } else {
+            val multiplatformExtension = project.multiplatformExtension!!
+            if (multiplatformExtension.targets.findByName("jvm") != null) {
+                project.tasks.named("jvmJar").also(project::addToBuildOnServer)
+            }
+            if (multiplatformExtension.targets.findByName("desktop") != null) {
+                project.tasks.named("desktopJar").also(project::addToBuildOnServer)
+            }
+        }
 
         project.addToProjectMap(extension)
     }

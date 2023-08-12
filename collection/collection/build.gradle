@@ -16,6 +16,7 @@
 
 import androidx.build.KmpPlatformsKt
 import androidx.build.LibraryType
+import androidx.build.KotlinTarget
 import androidx.build.PlatformIdentifier
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
@@ -43,6 +44,7 @@ androidXMultiplatform {
         all {
             languageSettings.optIn("kotlin.RequiresOptIn")
             languageSettings.optIn("kotlin.contracts.ExperimentalContracts")
+            languageSettings.optIn("kotlin.ExperimentalMultiplatform")
         }
 
         commonMain {
@@ -131,4 +133,5 @@ androidx {
     type = LibraryType.PUBLISHED_LIBRARY
     inceptionYear = "2018"
     description = "Standalone efficient collections."
+    kotlinTarget = KotlinTarget.KOTLIN_1_9
 }
