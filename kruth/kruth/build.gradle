@@ -15,6 +15,7 @@
  */
 
 import androidx.build.KmpPlatformsKt
+import androidx.build.KotlinTarget
 import androidx.build.LibraryType
 import androidx.build.PlatformIdentifier
 import androidx.build.Publish
@@ -93,4 +94,5 @@ androidx {
     publish = Publish.SNAPSHOT_ONLY
     runApiTasks = new RunApiTasks.Yes() // Used to diff against Google Truth
     type = LibraryType.INTERNAL_TEST_LIBRARY
+    kotlinTarget = KotlinTarget.KOTLIN_1_9
 }

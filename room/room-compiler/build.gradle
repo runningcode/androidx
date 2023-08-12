@@ -15,6 +15,7 @@
  */
 
 import androidx.build.BuildOnServerKt
+import androidx.build.KotlinTarget
 import androidx.build.LibraryType
 import androidx.build.SdkHelperKt
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -305,4 +306,5 @@ androidx {
         name = "BSD licence"
         url = "http://antlr.org/license.html"
     }
+    kotlinTarget = KotlinTarget.KOTLIN_1_9
 }

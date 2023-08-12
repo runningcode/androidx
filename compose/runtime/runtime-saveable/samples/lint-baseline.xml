@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.2.0-beta01" type="baseline" client="gradle" dependencies="true" name="AGP (8.2.0-beta01)" variant="all" version="8.2.0-beta01">
+
+    <issue
+        id="ObsoleteSampledAnnotation"
+        message="androidx.compose.runtime.saveable.samples.RememberSaveable is annotated with @Sampled, but is not linked to from a @sample tag."
+        errorLine1="fun RememberSaveable() {"
+        errorLine2="    ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/androidx/compose/runtime/saveable/samples/RememberSaveableSamples.kt"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSampledAnnotation"
+        message="androidx.compose.runtime.saveable.samples.RememberSaveableWithMutableState is annotated with @Sampled, but is not linked to from a @sample tag."
+        errorLine1="fun RememberSaveableWithMutableState() {"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/androidx/compose/runtime/saveable/samples/RememberSaveableSamples.kt"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSampledAnnotation"
+        message="androidx.compose.runtime.saveable.samples.RememberSaveableCustomSaver is annotated with @Sampled, but is not linked to from a @sample tag."
+        errorLine1="fun RememberSaveableCustomSaver() {"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/androidx/compose/runtime/saveable/samples/RememberSaveableSamples.kt"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSampledAnnotation"
+        message="androidx.compose.runtime.saveable.samples.RememberSaveableWithMutableStateAndCustomSaver is annotated with @Sampled, but is not linked to from a @sample tag."
+        errorLine1="fun RememberSaveableWithMutableStateAndCustomSaver() {"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/androidx/compose/runtime/saveable/samples/RememberSaveableSamples.kt"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSampledAnnotation"
+        message="androidx.compose.runtime.saveable.samples.SimpleNavigationWithSaveableStateSample is annotated with @Sampled, but is not linked to from a @sample tag."
+        errorLine1="fun SimpleNavigationWithSaveableStateSample() {"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/androidx/compose/runtime/saveable/samples/SaveableStateHolderSamples.kt"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSampledAnnotation"
+        message="androidx.compose.runtime.saveable.samples.CustomSaverSample is annotated with @Sampled, but is not linked to from a @sample tag."
+        errorLine1="fun CustomSaverSample() {"
+        errorLine2="    ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/androidx/compose/runtime/saveable/samples/SaverSamples.kt"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSampledAnnotation"
+        message="androidx.compose.runtime.saveable.samples.ListSaverSample is annotated with @Sampled, but is not linked to from a @sample tag."
+        errorLine1="fun ListSaverSample() {"
+        errorLine2="    ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/androidx/compose/runtime/saveable/samples/SaverSamples.kt"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSampledAnnotation"
+        message="androidx.compose.runtime.saveable.samples.MapSaverSample is annotated with @Sampled, but is not linked to from a @sample tag."
+        errorLine1="fun MapSaverSample() {"
+        errorLine2="    ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/androidx/compose/runtime/saveable/samples/SaverSamples.kt"/>
+    </issue>
+
+</issues>

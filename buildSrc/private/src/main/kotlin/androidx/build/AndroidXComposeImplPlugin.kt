@@ -66,7 +66,14 @@ class AndroidXComposeImplPlugin : Plugin<Project> {
                     project.configureAndroidCommonOptions(app)
                 }
                 is KotlinBasePluginWrapper -> {
-                    configureComposeCompilerPlugin(project, extension)
+                    val androidXExtension =
+                        project.extensions.findByType(AndroidXExtension::class.java)
+                            ?: throw Exception(
+                                "You have applied AndroidXComposePlugin without AndroidXPlugin"
+                            )
+
+                    configureComposeKotlinLanguageVersion(androidXExtension)
+                    configureComposeCompilerPlugin(project, extension, androidXExtension)
 
                     if (plugin is KotlinMultiplatformPluginWrapper) {
                         project.configureForMultiplatform()
@@ -178,18 +185,26 @@ class AndroidXComposeImplPlugin : Plugin<Project> {
             }
         }
     }
+
+    private fun configureComposeKotlinLanguageVersion(
+        androidXExtension: AndroidXExtension
+    ) {
+        // Force the Kotlin version to 1.9 for new multiplatform features.
+        androidXExtension.kotlinTarget.set(KotlinTarget.KOTLIN_1_9)
+    }
 }
 
 private const val COMPILER_PLUGIN_CONFIGURATION = "kotlinPlugin"
 
-private fun configureComposeCompilerPlugin(project: Project, extension: AndroidXComposeExtension) {
+private fun configureComposeCompilerPlugin(
+    project: Project,
+    extension: AndroidXComposeExtension,
+    androidXExtension: AndroidXExtension
+) {
     project.afterEvaluate {
         // If a project has opted-out of Compose compiler plugin, don't add it
         if (!extension.composeCompilerPluginEnabled) return@afterEvaluate
 
-        val androidXExtension =
-            project.extensions.findByType(AndroidXExtension::class.java)
-                ?: throw Exception("You have applied AndroidXComposePlugin without AndroidXPlugin")
         val shouldPublish = androidXExtension.shouldPublish()
 
         // Create configuration that we'll use to load Compose compiler plugin
