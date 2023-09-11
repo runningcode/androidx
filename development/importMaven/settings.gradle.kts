@@ -20,7 +20,7 @@ pluginManagement {
         gradlePluginPortal()
         google()
 
-        if (settings.extra.get("androidx.allowJetbrainsDev") == "true") {
+        if (settings.extra.properties.get("androidx.allowJetbrainsDev") == "true") {
             maven(url = "https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev/")
         }
     }
@@ -32,7 +32,7 @@ dependencyResolutionManagement {
         google()
         gradlePluginPortal()
 
-        if (settings.extra.get("androidx.allowJetbrainsDev") == "true") {
+        if (settings.extra.properties.get("androidx.allowJetbrainsDev") == "true") {
             maven(url = "https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev/")
         }
     }
