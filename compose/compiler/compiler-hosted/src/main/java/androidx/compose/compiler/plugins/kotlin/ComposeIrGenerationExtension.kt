@@ -85,6 +85,7 @@ class ComposeIrGenerationExtension(
         }
 
         ClassStabilityTransformer(
+            useK2,
             pluginContext,
             symbolRemapper,
             metrics
