@@ -49,10 +49,20 @@ object SettingsParser {
         val matcher = includeProjectPattern.matcher(fileContents)
         val includedProjects = mutableListOf<IncludedProject>()
         while (matcher.find()) {
+            if (matcher.group().contains("new File")) {
+                // we don't support explicit project paths in playground
+                continue
+            }
             // check if is an include project line, if so, extract project gradle path and
             // file system path and call the filter
             val projectGradlePath =
                 matcher.group("name") ?: error("Project gradle path should not be null")
+            if (projectGradlePath == ":compose:runtime") {
+                // This project is in the settings.gradle file for historical reasons when its
+                // path didn't match the folder structure.
+                // remove this check after http://aosp/2762271 is merged
+                continue
+            }
             val projectFilePath =
                 matcher.group("path") ?: createFilePathFromGradlePath(projectGradlePath)
             includedProjects.add(IncludedProject(projectGradlePath, projectFilePath))
