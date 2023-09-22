@@ -77,7 +77,9 @@ abstract class AndroidXExtension(val project: Project) : ExtensionAware, Android
 
         mavenGroup = chooseLibraryGroup()
         chooseProjectVersion()
-
+        if (mavenGroup == null) {
+            setDefaultGroupFromProjectPath()
+        }
         // service that can compute full list of projects in settings.gradle
         val settings = lazyReadFile("settings.gradle")
         listProjectsService =
@@ -196,6 +198,24 @@ abstract class AndroidXExtension(val project: Project) : ExtensionAware, Android
             "Library group (in libraryversions.toml) having group=\"$groupIdText\" is $result"
         )
         return result
+    }
+
+    /**
+     * Sets a group for the project based on its path when no group is explicitly specified.
+     * This ensures we always use a known value for the project group instead of what Gradle assigns
+     * by default. Furthermore, it also helps make them consistent between the main build and
+     * the playground builds.
+     */
+    private fun setDefaultGroupFromProjectPath() {
+        check(mavenGroup == null) {
+            "Should not call this method if there is an explicit mavenGroup for the project"
+        }
+        project.group = project.path
+            .split(":")
+            .filter {
+                it.isNotEmpty()
+            }.dropLast(1)
+            .joinToString(separator = ".", prefix = "androidx.")
     }
 
     private fun chooseProjectVersion() {
