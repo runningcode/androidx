@@ -24,7 +24,6 @@ import androidx.camera.camera2.pipe.CameraController
 import androidx.camera.camera2.pipe.CameraGraph
 import androidx.camera.camera2.pipe.CameraMetadata
 import androidx.camera.camera2.pipe.GraphState
-import androidx.camera.camera2.pipe.OutputStream
 import androidx.camera.camera2.pipe.StreamGraph
 import androidx.camera.camera2.pipe.StreamId
 import androidx.camera.camera2.pipe.config.CameraGraphScope
@@ -81,24 +80,15 @@ constructor(
                 "Cannot create a HIGH_SPEED CameraGraph with more than two outputs. " +
                     "Configured outputs are ${streamGraph.outputs}"
             }
-            val containsPreviewStream =
-                this.streamGraph.outputs.any {
-                    it.streamUseCase == OutputStream.StreamUseCase.PREVIEW
-                }
-            val containsVideoStream =
-                this.streamGraph.outputs.any {
-                    it.streamUseCase == OutputStream.StreamUseCase.VIDEO_RECORD
-                }
-            if (streamGraph.outputs.size == 2) {
-                require(containsPreviewStream) {
-                    "Cannot create a HIGH_SPEED CameraGraph without setting the Preview " +
-                        "Video stream. Configured outputs are ${streamGraph.outputs}"
-                }
-            } else {
-                require(containsPreviewStream || containsVideoStream) {
-                    "Cannot create a HIGH_SPEED CameraGraph without having a Preview or Video " +
-                        "stream. Configured outputs are ${streamGraph.outputs}"
-                }
+
+            // Streams must be preview and/or video for high speed sessions
+            val allStreamsValidForHighSpeedOperatingMode = this.streamGraph.outputs.all {
+                it.isValidForHighSpeedOperatingMode()
+            }
+
+            require(allStreamsValidForHighSpeedOperatingMode) {
+                "HIGH_SPEED CameraGraph must only contain Preview and/or Video " +
+                    "streams. Configured outputs are ${streamGraph.outputs}"
             }
         }
 

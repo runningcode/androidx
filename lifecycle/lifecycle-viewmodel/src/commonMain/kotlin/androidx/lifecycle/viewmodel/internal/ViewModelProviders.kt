@@ -49,12 +49,13 @@ internal object ViewModelProviders {
 
     internal fun <VM : ViewModel> unsupportedCreateViewModel(): VM =
         throw UnsupportedOperationException(
-            "Factory.create(String) is unsupported. This " +
-                "Factory requires `CreationExtras` to be passed into `create` method."
+            "`Factory.create(String, CreationExtras)` is not implemented. You may need to " +
+                "override the method and provide a custom implementation. Note that using " +
+                "`Factory.create(String)` is not supported and considered an error."
         )
 
     internal fun createInitializerFactory(
-        initializers: List<ViewModelInitializer<*>>,
+        initializers: Collection<ViewModelInitializer<*>>,
     ): ViewModelProvider.Factory = InitializerViewModelFactory(*initializers.toTypedArray())
 
     internal fun createInitializerFactory(

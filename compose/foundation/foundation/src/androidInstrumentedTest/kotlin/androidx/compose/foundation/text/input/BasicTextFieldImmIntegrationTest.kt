@@ -43,9 +43,11 @@ import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.requestFocus
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.FlakyTest
+import androidx.test.filters.SdkSuppress
 import androidx.test.filters.SmallTest
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
@@ -105,6 +107,24 @@ internal class BasicTextFieldImmIntegrationTest {
             focusManager.clearFocus()
         }
         inputMethodInterceptor.assertNoSessionActive()
+    }
+
+    @Test
+    fun doesNotStopBeingTextEditor_whenWindowFocusLost() {
+        val state = TextFieldState()
+        var windowFocus by mutableStateOf(true)
+        inputMethodInterceptor.setContent {
+            CompositionLocalProvider(LocalWindowInfo provides object : WindowInfo {
+                override val isWindowFocused: Boolean get() = windowFocus
+            }) {
+                BasicTextField(state, Modifier.testTag(Tag))
+            }
+        }
+        requestFocus(Tag)
+        rule.runOnIdle {
+            windowFocus = false
+        }
+        inputMethodInterceptor.assertSessionActive()
     }
 
     @Test
@@ -202,9 +222,9 @@ internal class BasicTextFieldImmIntegrationTest {
                 modifier = Modifier.testTag(Tag),
                 inputTransformation = { _, new ->
                     // Force the selection not to change.
-                    val initialSelection = new.selectionInChars
+                    val initialSelection = new.selection
                     new.append("world")
-                    new.selectCharsIn(initialSelection)
+                    new.selection = initialSelection
                 }
             )
         }
@@ -233,9 +253,9 @@ internal class BasicTextFieldImmIntegrationTest {
                 state = state,
                 modifier = Modifier.testTag(Tag),
                 inputTransformation = { _, new ->
-                    val initialSelection = new.selectionInChars
+                    val initialSelection = new.selection
                     new.append("world")
-                    new.selectCharsIn(initialSelection)
+                    new.selection = initialSelection
                 }
             )
         }
@@ -297,7 +317,7 @@ internal class BasicTextFieldImmIntegrationTest {
 
     @Test
     fun immUpdated_whenEditChangesSelection() {
-        val state = TextFieldState("hello", initialSelectionInChars = TextRange(0))
+        val state = TextFieldState("hello", initialSelection = TextRange(0))
         inputMethodInterceptor.setContent {
             BasicTextField(state, Modifier.testTag(Tag))
         }
@@ -335,6 +355,41 @@ internal class BasicTextFieldImmIntegrationTest {
         rule.runOnIdle {
             imm.expectCall("updateSelection(5, 5, -1, -1)")
             imm.expectCall("restartInput")
+            imm.expectNoMoreCalls()
+        }
+    }
+
+    @Test
+    fun immNotRestarted_whenEditsComeFromIME() {
+        // We are not expecting the IME to restart itself when changes are coming from the IME.
+        // Following edits are simulated as if they are coming from IME through InputConnection.
+        // We expect calls to `updateSelection` but never `restartInput`
+        val state = TextFieldState("Hello")
+        inputMethodInterceptor.setContent {
+            BasicTextField(state, Modifier.testTag(Tag))
+        }
+        requestFocus(Tag)
+        inputMethodInterceptor.withInputConnection {
+            beginBatchEdit()
+            commitText(" World", 1)
+            endBatchEdit()
+        }
+
+        rule.runOnIdle {
+            imm.expectCall("updateSelection(11, 11, -1, -1)")
+            imm.expectNoMoreCalls()
+            assertThat(state.text.toString()).isEqualTo("Hello World")
+        }
+
+        inputMethodInterceptor.withInputConnection {
+            beginBatchEdit()
+            // Remove the " World" that we added in the previous edit.
+            deleteSurroundingText(6, 0)
+            endBatchEdit()
+        }
+
+        rule.runOnIdle {
+            imm.expectCall("updateSelection(5, 5, -1, -1)")
             imm.expectNoMoreCalls()
         }
     }
@@ -397,6 +452,24 @@ internal class BasicTextFieldImmIntegrationTest {
         }
     }
 
+    @SdkSuppress(minSdkVersion = 24)
+    @Test
+    fun setHintLocales() {
+        val state = TextFieldState()
+        inputMethodInterceptor.setContent {
+            BasicTextField(
+                state = state,
+                modifier = Modifier.testTag(Tag),
+                keyboardOptions = KeyboardOptions(hintLocales = LocaleList("tr"))
+            )
+        }
+        requestFocus(Tag)
+
+        inputMethodInterceptor.withEditorInfo {
+            assertThat(hintLocales?.toLanguageTags()).isEqualTo("tr")
+        }
+    }
+
     private fun requestFocus(tag: String) =
         rule.onNodeWithTag(tag).requestFocus()
 }
@@ -412,7 +485,10 @@ internal fun InputMethodInterceptor.setTextFieldTestContent(
         CompositionLocalProvider(LocalWindowInfo provides windowInfo) {
             Row {
                 // Extra focusable that takes initial focus when focus is cleared.
-                Box(Modifier.size(10.dp).focusable())
+                Box(
+                    Modifier
+                        .size(10.dp)
+                        .focusable())
                 Box { content() }
             }
         }

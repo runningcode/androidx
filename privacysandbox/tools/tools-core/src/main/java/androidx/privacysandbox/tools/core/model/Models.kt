@@ -24,7 +24,7 @@ fun ParsedApi.getOnlyService(): AnnotatedInterface {
 }
 
 fun ParsedApi.hasSuspendFunctions(): Boolean {
-    val annotatedInterfaces = services + interfaces
+    val annotatedInterfaces = services + interfaces + callbacks
     return annotatedInterfaces
         .flatMap(AnnotatedInterface::methods)
         .any(Method::isSuspend)
@@ -67,6 +67,7 @@ object Types {
     val primitiveTypes = setOf(unit, boolean, int, long, float, double, string, char, short)
 
     val any = Type("kotlin", simpleName = "Any")
+    val bundle = Type("android.os", "Bundle")
     val sandboxedUiAdapter =
         Type(packageName = "androidx.privacysandbox.ui.core", simpleName = "SandboxedUiAdapter")
     val sdkActivityLauncher = Type(

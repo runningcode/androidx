@@ -1868,7 +1868,8 @@ public class ExifInterface {
      */
     public static final String TAG_GPS_SPEED_REF = "GPSSpeedRef";
     /**
-     *  <p>Indicates the speed of GPS receiver movement.</p>
+     * Indicates the speed of GPS receiver movement. The units are indicated by {@link
+     * #TAG_GPS_SPEED_REF}.
      *
      *  <ul>
      *      <li>Tag = 13</li>
@@ -4603,7 +4604,7 @@ public class ExifInterface {
             // Ignore exceptions in order to keep the compatibility with the old versions of
             // ExifInterface.
             if (DEBUG) {
-                Log.w(TAG, "Invalid image: ExifInterface got an unsupported image format file"
+                Log.w(TAG, "Invalid image: ExifInterface got an unsupported image format file "
                         + "(ExifInterface supports JPEG and some RAW image formats only) "
                         + "or a corrupted JPEG file to ExifInterface.", e);
             }

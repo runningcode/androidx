@@ -43,6 +43,7 @@ import androidx.room.support.PrePackagedCopyOpenHelper
 import androidx.room.support.PrePackagedCopyOpenHelperFactory
 import androidx.room.support.QueryInterceptorOpenHelperFactory
 import androidx.room.util.contains as containsExt
+import androidx.room.util.findAndInstantiateDatabaseImpl
 import androidx.room.util.findMigrationPath as findMigrationPathExt
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.SQLiteDriver
@@ -1432,7 +1433,7 @@ actual abstract class RoomDatabase {
          * @param callback The callback.
          * @return This builder instance.
          */
-        open fun addCallback(callback: Callback) = apply {
+        actual open fun addCallback(callback: Callback) = apply {
             this.callbacks.add(callback)
         }
 
@@ -1650,8 +1651,7 @@ actual abstract class RoomDatabase {
                 allowDestructiveMigrationForAllTables,
                 driver,
             )
-            val db = factory?.invoke()
-                ?: Room.getGeneratedImplementation<T, T>(klass.java, "_Impl")
+            val db = factory?.invoke() ?: findAndInstantiateDatabaseImpl(klass.java)
             db.init(configuration)
             return db
         }
@@ -1754,7 +1754,7 @@ actual abstract class RoomDatabase {
     /**
      * Callback for [RoomDatabase].
      */
-    abstract class Callback {
+    actual abstract class Callback {
         /**
          * Called when the database is created for the first time. This is called after all the
          * tables are created.
@@ -1764,11 +1764,17 @@ actual abstract class RoomDatabase {
         open fun onCreate(db: SupportSQLiteDatabase) {}
 
         /**
-         * Called when the database has been opened.
+         * Called when the database is created for the first time.
          *
-         * @param db The database.
+         * This function called after all the tables are created.
+         *
+         * @param connection The database connection.
          */
-        open fun onOpen(db: SupportSQLiteDatabase) {}
+        actual open fun onCreate(connection: SQLiteConnection) {
+            if (connection is SupportSQLiteConnection) {
+                onCreate(connection.db)
+            }
+        }
 
         /**
          * Called after the database was destructively migrated
@@ -1776,6 +1782,35 @@ actual abstract class RoomDatabase {
          * @param db The database.
          */
         open fun onDestructiveMigration(db: SupportSQLiteDatabase) {}
+
+        /**
+         * Called after the database was destructively migrated.
+         *
+         * @param connection The database connection.
+         */
+        actual open fun onDestructiveMigration(connection: SQLiteConnection) {
+            if (connection is SupportSQLiteConnection) {
+                onDestructiveMigration(connection.db)
+            }
+        }
+
+        /**
+         * Called when the database has been opened.
+         *
+         * @param db The database.
+         */
+        open fun onOpen(db: SupportSQLiteDatabase) {}
+
+        /**
+         * Called when the database has been opened.
+         *
+         * @param connection The database connection.
+         */
+        actual open fun onOpen(connection: SQLiteConnection) {
+            if (connection is SupportSQLiteConnection) {
+                onOpen(connection.db)
+            }
+        }
     }
 
     /**
@@ -1836,22 +1871,30 @@ actual abstract class RoomDatabase {
  * The internal dispatcher used to execute the given [block] will block an utilize a thread from
  * Room's transaction executor until the [block] is complete.
  */
-public suspend fun <R> RoomDatabase.withTransaction(block: suspend () -> R): R {
+public suspend fun <R> RoomDatabase.withTransaction(block: suspend () -> R): R =
+    withTransactionContext {
+        @Suppress("DEPRECATION")
+        beginTransaction()
+        try {
+            val result = block.invoke()
+            @Suppress("DEPRECATION")
+            setTransactionSuccessful()
+            result
+        } finally {
+            @Suppress("DEPRECATION")
+            endTransaction()
+        }
+    }
+
+/**
+ * Calls the specified suspending [block] with Room's transaction context.
+ */
+internal suspend fun <R> RoomDatabase.withTransactionContext(block: suspend () -> R): R {
     val transactionBlock: suspend CoroutineScope.() -> R = transaction@{
         val transactionElement = coroutineContext[TransactionElement]!!
         transactionElement.acquire()
         try {
-            @Suppress("DEPRECATION")
-            beginTransaction()
-            try {
-                val result = block.invoke()
-                @Suppress("DEPRECATION")
-                setTransactionSuccessful()
-                return@transaction result
-            } finally {
-                @Suppress("DEPRECATION")
-                endTransaction()
-            }
+            return@transaction block.invoke()
         } finally {
             transactionElement.release()
         }

@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
@@ -30,29 +29,35 @@ import androidx.compose.ui.Modifier
  * A Material opinionated implementation of [ThreePaneScaffold] that will display the provided three
  * panes in a canonical supporting-pane layout.
  *
- * @param supportingPane the supporting pane of the scaffold.
- *        See [SupportingPaneScaffoldRole.Supporting].
+ * @param directive The top-level directives about how the scaffold should arrange its panes.
+ * @param value The current adapted value of the scaffold, which indicates how each pane of
+ *        the scaffold is adapted.
+ * @param mainPane the main pane of the scaffold, which is supposed to hold the major content of an
+ *        app, for example, the editing screen of a doc app. See [SupportingPaneScaffoldRole.Main].
+ * @param supportingPane the supporting pane of the scaffold, which is supposed to hold the support
+ *        content of an app, for example, the comment list of a doc app. See
+ *        [SupportingPaneScaffoldRole.Supporting].
  * @param modifier [Modifier] of the scaffold layout.
- * @param scaffoldState the state of the scaffold, which provides the current scaffold directive
- *        and scaffold value.
+ * @param extraPane the extra pane of the scaffold, which is supposed to hold any additional content
+ *        besides the main and the supporting panes, for example, a styling panel in a doc app.
+ *        See [SupportingPaneScaffoldRole.Extra].
  * @param windowInsets window insets that the scaffold will respect.
- * @param extraPane the extra pane of the scaffold. See [SupportingPaneScaffoldRole.Extra].
- * @param mainPane the main pane of the scaffold. See [SupportingPaneScaffoldRole.Main].
  */
 @ExperimentalMaterial3AdaptiveApi
 @Composable
 fun SupportingPaneScaffold(
+    directive: PaneScaffoldDirective,
+    value: ThreePaneScaffoldValue,
+    mainPane: @Composable ThreePaneScaffoldScope.() -> Unit,
     supportingPane: @Composable ThreePaneScaffoldScope.() -> Unit,
     modifier: Modifier = Modifier,
-    scaffoldState: ThreePaneScaffoldState = calculateSupportingPaneScaffoldState(),
-    windowInsets: WindowInsets = SupportingPaneScaffoldDefaults.windowInsets,
     extraPane: (@Composable ThreePaneScaffoldScope.() -> Unit)? = null,
-    mainPane: @Composable ThreePaneScaffoldScope.() -> Unit
+    windowInsets: WindowInsets = SupportingPaneScaffoldDefaults.windowInsets,
 ) {
     ThreePaneScaffold(
         modifier = modifier.fillMaxSize(),
-        scaffoldDirective = scaffoldState.scaffoldDirective,
-        scaffoldValue = scaffoldState.scaffoldValue,
+        scaffoldDirective = directive,
+        scaffoldValue = value,
         paneOrder = ThreePaneScaffoldDefaults.SupportingPaneLayoutPaneOrder,
         windowInsets = windowInsets,
         secondaryPane = supportingPane,
@@ -60,71 +65,6 @@ fun SupportingPaneScaffold(
         primaryPane = mainPane
     )
 }
-
-/**
- * This function calculates [ThreePaneScaffoldValue] based on the given [PaneScaffoldDirective],
- * [ThreePaneScaffoldAdaptStrategies], and the current pane destination of a
- * [SupportingPaneScaffold].
- *
- * @param currentDestination the current destination item, which will be guaranteed to have the
- *        highest priority when deciding pane visibilities.
- * @param scaffoldDirective the layout directives that the associated [SupportingPaneScaffold]
- *        needs to follow. The default value will be the calculation result from
- *        [calculateStandardPaneScaffoldDirective] with the current window configuration, and
- *        will be automatically updated when the window configuration changes.
- * @param adaptStrategies the [ThreePaneScaffoldAdaptStrategies] should be used by scaffold panes.
- */
-@ExperimentalMaterial3AdaptiveApi
-@Composable
-fun calculateSupportingPaneScaffoldState(
-    currentDestination: ThreePaneScaffoldDestinationItem<*> =
-        ThreePaneScaffoldDestinationItem(SupportingPaneScaffoldRole.Main, null),
-    scaffoldDirective: PaneScaffoldDirective =
-        calculateStandardPaneScaffoldDirective(currentWindowAdaptiveInfo()),
-    adaptStrategies: ThreePaneScaffoldAdaptStrategies =
-        SupportingPaneScaffoldDefaults.adaptStrategies()
-): ThreePaneScaffoldState = ThreePaneScaffoldStateImpl(
-    scaffoldDirective,
-    calculateThreePaneScaffoldValue(
-        scaffoldDirective.maxHorizontalPartitions,
-        adaptStrategies,
-        currentDestination
-    )
-)
-
-/**
- * This function calculates [ThreePaneScaffoldValue] based on the given [PaneScaffoldDirective],
- * [ThreePaneScaffoldAdaptStrategies], and the pane destination history of a
- * [SupportingPaneScaffold].
- *
- * @param destinationHistory The history of past destination items. The last destination will
- *        have the highest priority, and the second last destination will have the second highest
- *        priority, and so forth until all panes have a priority assigned. Note that the last
- *        destination is supposed to be the last item of the provided list. When the history is
- *        empty or there are panes left unassigned, default priorities will be assigned to those
- *        panes in the order of Main > Supporting > Extra.
- * @param scaffoldDirective the layout directives that the associated [SupportingPaneScaffold]
- *        needs to follow. The default value will be the calculation result from
- *        [calculateStandardPaneScaffoldDirective] with the current window configuration, and
- *        will be automatically updated when the window configuration changes.
- * @param adaptStrategies the [ThreePaneScaffoldAdaptStrategies] should be used by scaffold panes.
- */
-@ExperimentalMaterial3AdaptiveApi
-@Composable
-fun calculateSupportingPaneScaffoldState(
-    destinationHistory: List<ThreePaneScaffoldDestinationItem<*>>,
-    scaffoldDirective: PaneScaffoldDirective =
-        calculateStandardPaneScaffoldDirective(currentWindowAdaptiveInfo()),
-    adaptStrategies: ThreePaneScaffoldAdaptStrategies =
-        SupportingPaneScaffoldDefaults.adaptStrategies()
-): ThreePaneScaffoldState = ThreePaneScaffoldStateImpl(
-    scaffoldDirective,
-    calculateThreePaneScaffoldValue(
-        scaffoldDirective.maxHorizontalPartitions,
-        adaptStrategies,
-        destinationHistory
-    )
-)
 
 /**
  * Provides default values of [SupportingPaneScaffold].
@@ -158,28 +98,31 @@ object SupportingPaneScaffoldDefaults {
 }
 
 /**
- * The set of the available pane roles of [SupportingPaneScaffold]. Basically those values are
- * aliases of [ThreePaneScaffoldRole]. We suggest you to use the values defined here instead of
- * the raw [ThreePaneScaffoldRole] under the context of [SupportingPaneScaffold] for better
- * code clarity.
+ * The set of the available pane roles of [SupportingPaneScaffold]. Those roles map to their
+ * corresponding [ThreePaneScaffoldRole], which is a generic role definition across all types
+ * of three pane scaffolds. We suggest you to use the values defined here instead of the raw
+ * [ThreePaneScaffoldRole] under the context of [SupportingPaneScaffold] for better code clarity.
  */
 @ExperimentalMaterial3AdaptiveApi
 object SupportingPaneScaffoldRole {
     /**
-     * The main pane of [SupportingPaneScaffold]. It is an alias of
+     * The main pane of [SupportingPaneScaffold], which is supposed to hold the major content of an
+     * app, for example, the editing screen of a doc app. It maps to
      * [ThreePaneScaffoldRole.Primary].
      */
     val Main = ThreePaneScaffoldRole.Primary
 
     /**
-     * The supporting pane of [SupportingPaneScaffold]. It is an alias of
+     * The supporting pane of [SupportingPaneScaffold], which is supposed to hold the support
+     * content of an app, for example, the comment list of a doc app. It maps to
      * [ThreePaneScaffoldRole.Secondary].
      */
     val Supporting = ThreePaneScaffoldRole.Secondary
 
     /**
-     * The extra pane of [SupportingPaneScaffold]. It is an alias of
-     * [ThreePaneScaffoldRole.Tertiary].
+     * The extra pane of [SupportingPaneScaffold], which is supposed to hold any additional content
+     * besides the main and the supporting panes, for example, a styling panel in a doc app. It maps
+     * to [ThreePaneScaffoldRole.Tertiary].
      */
     val Extra = ThreePaneScaffoldRole.Tertiary
 }

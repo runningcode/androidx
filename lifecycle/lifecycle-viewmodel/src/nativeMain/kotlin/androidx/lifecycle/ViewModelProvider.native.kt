@@ -20,6 +20,7 @@ import androidx.annotation.MainThread
 import androidx.annotation.RestrictTo
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.ViewModelProviderImpl
+import androidx.lifecycle.viewmodel.internal.ViewModelProviders
 import kotlin.reflect.KClass
 
 public actual class ViewModelProvider private constructor(
@@ -40,7 +41,7 @@ public actual class ViewModelProvider private constructor(
         public actual fun <T : ViewModel> create(
             modelClass: KClass<T>,
             extras: CreationExtras,
-        ): T = create(modelClass)
+        ): T = ViewModelProviders.unsupportedCreateViewModel()
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -61,5 +62,8 @@ public actual class ViewModelProvider private constructor(
             factory: Factory,
             extras: CreationExtras
         ): ViewModelProvider = ViewModelProvider(ViewModelProviderImpl(store, factory, extras))
+
+        public actual val VIEW_MODEL_KEY: CreationExtras.Key<String> =
+            ViewModelProviders.ViewModelKey
     }
 }

@@ -73,7 +73,7 @@ class ModelValidator private constructor(val api: ParsedApi) {
     }
 
     private fun validateNonSuspendFunctionsReturnUnit() {
-        val annotatedInterfaces = api.services + api.interfaces
+        val annotatedInterfaces = api.services + api.interfaces + api.callbacks
         for (annotatedInterface in annotatedInterfaces) {
             for (method in annotatedInterface.methods) {
                 if (!method.isSuspend && method.returnType != Types.unit) {
@@ -87,7 +87,7 @@ class ModelValidator private constructor(val api: ParsedApi) {
     }
 
     private fun validateServiceAndInterfaceMethods() {
-        val annotatedInterfaces = api.services + api.interfaces
+        val annotatedInterfaces = api.services + api.interfaces + api.callbacks
         for (annotatedInterface in annotatedInterfaces) {
             for (method in annotatedInterface.methods) {
                 if (method.parameters.any { !(isValidInterfaceParameterType(it.type)) }) {
@@ -114,7 +114,9 @@ class ModelValidator private constructor(val api: ParsedApi) {
 
     private fun validateValuePropertyTypes() {
         for (value in api.values) {
-            if (value !is AnnotatedDataClass) { continue }
+            if (value !is AnnotatedDataClass) {
+                continue
+            }
             for (property in value.properties) {
                 if (!isValidValuePropertyType(property.type)) {
                     errors.add(
@@ -139,12 +141,6 @@ class ModelValidator private constructor(val api: ParsedApi) {
                             "@PrivacySandboxValue, interfaces annotated with " +
                             "@PrivacySandboxInterface, and SdkActivityLaunchers are supported as " +
                             "callback parameter types."
-                    )
-                }
-                if (method.returnType != Types.unit || method.isSuspend) {
-                    errors.add(
-                        "Error in ${callback.type.qualifiedName}.${method.name}: callback " +
-                            "methods should be non-suspending and have no return values."
                     )
                 }
             }
@@ -179,12 +175,26 @@ class ModelValidator private constructor(val api: ParsedApi) {
             if (type.isNullable) {
                 errors.add("Nullable lists are not supported")
             }
-            return type.typeParameters[0].let { isValue(it) || isPrimitive(it) }
+            val typeParameter = type.typeParameters.first()
+            if (typeParameter.isNullable) {
+                errors.add(
+                    "Nullable type parameters are not supported in lists, found ${
+                        typeParameter.qualifiedName
+                    }"
+                )
+            }
+            val holdsValidType =
+                isValue(typeParameter) || isPrimitive(typeParameter) || isBundledType(typeParameter)
+            if (!holdsValidType) {
+                errors.add("Invalid type parameter in list, found ${typeParameter.qualifiedName}.")
+            }
+            return true
         }
         return false
     }
 
-    private fun isBundledType(type: Type) = type == Types.sdkActivityLauncher
+    private fun isBundledType(type: Type) =
+        type == Types.sdkActivityLauncher || type.asNonNull() == Types.bundle
 }
 
 data class ValidationResult(val errors: List<String>) {

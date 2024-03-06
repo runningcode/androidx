@@ -39,6 +39,7 @@ import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.layout.MultiContentMeasurePolicy
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
@@ -82,6 +83,7 @@ internal fun ThreePaneScaffold(
     windowInsets: WindowInsets,
     secondaryPane: @Composable ThreePaneScaffoldScope.() -> Unit,
     tertiaryPane: (@Composable ThreePaneScaffoldScope.() -> Unit)? = null,
+    paneExpansionState: PaneExpansionState = PaneExpansionState(),
     primaryPane: @Composable ThreePaneScaffoldScope.() -> Unit,
 ) {
     val layoutDirection = LocalLayoutDirection.current
@@ -92,7 +94,10 @@ internal fun ThreePaneScaffold(
     val paneMotion = calculateThreePaneMotion(
         previousScaffoldValue = previousScaffoldValue.value,
         currentScaffoldValue = scaffoldValue,
-        paneOrder = ltrPaneOrder
+        paneOrder = ltrPaneOrder,
+        spacerSize = with(LocalDensity.current) {
+            scaffoldDirective.horizontalPartitionSpacerSize.roundToPx()
+        }
     )
     previousScaffoldValue.value = scaffoldValue
 
@@ -148,8 +153,14 @@ internal fun ThreePaneScaffold(
         },
     )
 
-    val measurePolicy = remember {
-        ThreePaneContentMeasurePolicy(scaffoldDirective, scaffoldValue, ltrPaneOrder, windowInsets)
+    val measurePolicy = remember(paneExpansionState) {
+        ThreePaneContentMeasurePolicy(
+            scaffoldDirective,
+            scaffoldValue,
+            paneExpansionState,
+            ltrPaneOrder,
+            windowInsets
+        )
     }.apply {
         this.scaffoldDirective = scaffoldDirective
         this.scaffoldValue = scaffoldValue
@@ -173,6 +184,7 @@ private class ThreePaneScaffoldValueHolder(var value: ThreePaneScaffoldValue)
 private class ThreePaneContentMeasurePolicy(
     scaffoldDirective: PaneScaffoldDirective,
     scaffoldValue: ThreePaneScaffoldValue,
+    val paneExpansionState: PaneExpansionState,
     paneOrder: ThreePaneScaffoldHorizontalOrder,
     windowInsets: WindowInsets
 ) : MultiContentMeasurePolicy {
@@ -248,7 +260,52 @@ private class ThreePaneContentMeasurePolicy(
                 constraints.maxHeight - bottomContentPadding
             )
 
-            if (scaffoldDirective.excludedBounds.isNotEmpty()) {
+            if (!paneExpansionState.isUnspecified()) {
+                // Pane expansion should override everything
+                val availableWidth = constraints.maxWidth - leftContentPadding - rightContentPadding
+                if (paneExpansionState.firstPaneWidth == 0 ||
+                    paneExpansionState.firstPanePercentage == 0f) {
+                    if (visiblePanes.size > 1) {
+                        measureAndPlacePaneWithLocalBounds(
+                            outerBounds,
+                            visiblePanes[1],
+                            isLookingAhead
+                        )
+                    }
+                } else if (
+                    paneExpansionState.firstPaneWidth >= availableWidth - verticalSpacerSize ||
+                    paneExpansionState.firstPanePercentage >= 1f) {
+                    if (visiblePanes.isNotEmpty()) {
+                        measureAndPlacePaneWithLocalBounds(
+                            outerBounds,
+                            visiblePanes[0],
+                            isLookingAhead
+                        )
+                    }
+                } else if (visiblePanes.isNotEmpty()) {
+                    val firstPaneWidth =
+                        if (paneExpansionState.firstPaneWidth !=
+                            PaneExpansionState.UnspecifiedWidth) {
+                            paneExpansionState.firstPaneWidth
+                        } else {
+                            (paneExpansionState.firstPanePercentage *
+                                (availableWidth - verticalSpacerSize)).toInt()
+                        }
+                    val firstPaneRight = outerBounds.left + firstPaneWidth
+                    measureAndPlacePaneWithLocalBounds(
+                        outerBounds.copy(right = firstPaneRight),
+                        visiblePanes[0],
+                        isLookingAhead
+                    )
+                    if (visiblePanes.size > 1) {
+                        measureAndPlacePaneWithLocalBounds(
+                            outerBounds.copy(left = firstPaneRight + verticalSpacerSize),
+                            visiblePanes[1],
+                            isLookingAhead
+                        )
+                    }
+                }
+            } else if (scaffoldDirective.excludedBounds.isNotEmpty()) {
                 val layoutBounds = coordinates!!.boundsInWindow()
                 val layoutPhysicalPartitions = mutableListOf<Rect>()
                 var actualLeft = layoutBounds.left + leftContentPadding
@@ -415,13 +472,21 @@ private class ThreePaneContentMeasurePolicy(
         }
     }
 
-    @OptIn(ExperimentalMaterial3AdaptiveApi::class)
     private fun Placeable.PlacementScope.measureAndPlacePane(
         partitionBounds: Rect,
         measurable: PaneMeasurable,
         isLookingAhead: Boolean
+    ) = measureAndPlacePaneWithLocalBounds(
+        getLocalBounds(partitionBounds),
+        measurable,
+        isLookingAhead
+    )
+
+    private fun Placeable.PlacementScope.measureAndPlacePaneWithLocalBounds(
+        localBounds: IntRect,
+        measurable: PaneMeasurable,
+        isLookingAhead: Boolean
     ) {
-        val localBounds = getLocalBounds(partitionBounds)
         measurable.measuredWidth = localBounds.width
         measurable.apply {
             measure(Constraints.fixed(measuredWidth, localBounds.height))
@@ -436,7 +501,6 @@ private class ThreePaneContentMeasurePolicy(
         }
     }
 
-    @OptIn(ExperimentalMaterial3AdaptiveApi::class)
     private fun Placeable.PlacementScope.measureAndPlacePanes(
         partitionBounds: Rect,
         spacerSize: Int,
@@ -543,7 +607,7 @@ private fun Modifier.clipToBounds(adaptedValue: PaneAdaptedValue): Modifier =
 @ExperimentalMaterial3AdaptiveApi
 @Composable
 fun ThreePaneScaffoldScope.AnimatedPane(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     content: (@Composable ThreePaneScaffoldScope.() -> Unit),
 ) {
     AnimatedVisibility(

@@ -24,6 +24,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
@@ -81,7 +82,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toOffset
-import androidx.test.filters.FlakyTest
 import androidx.test.filters.LargeTest
 import androidx.test.filters.SdkSuppress
 import com.google.common.truth.Truth.assertThat
@@ -125,7 +125,7 @@ class TextFieldCursorTest : FocusedWindowTest {
     private var textLayoutResult: (() -> TextLayoutResult?)? = null
     private val cursorRect: Rect
         // assume selection is collapsed
-        get() = textLayoutResult?.invoke()?.getCursorRect(state.text.selectionInChars.start)
+        get() = textLayoutResult?.invoke()?.getCursorRect(state.text.selection.start)
             ?: Rect.Zero
 
     private val cursorSize: DpSize by lazy {
@@ -435,7 +435,7 @@ class TextFieldCursorTest : FocusedWindowTest {
     @Test
     @SdkSuppress(minSdkVersion = Build.VERSION_CODES.O)
     fun cursorUnsetColor_noCursor() {
-        state = TextFieldState("hello", initialSelectionInChars = TextRange(2))
+        state = TextFieldState("hello", initialSelection = TextRange(2))
         rule.setTestContent {
             BasicTextField(
                 state = state,
@@ -473,9 +473,8 @@ class TextFieldCursorTest : FocusedWindowTest {
 
     @Test
     @SdkSuppress(minSdkVersion = Build.VERSION_CODES.O)
-    @FlakyTest(bugId = 303503435)
     fun cursorNotBlinking_whileTyping() {
-        state = TextFieldState("test", initialSelectionInChars = TextRange(4))
+        state = TextFieldState("test", initialSelection = TextRange(4))
         rule.setTestContent {
             BasicTextField(
                 state = state,
@@ -490,8 +489,6 @@ class TextFieldCursorTest : FocusedWindowTest {
 
         // cursor visible first 500 ms
         rule.mainClock.advanceTimeBy(500)
-        // TODO(b/170298051) check here that cursor is visible when we have a way to control
-        //  cursor position when sending a text
 
         // change text field value
         rule.onNode(hasSetTextAction())
@@ -507,9 +504,8 @@ class TextFieldCursorTest : FocusedWindowTest {
 
     @Test
     @SdkSuppress(minSdkVersion = Build.VERSION_CODES.O)
-    @FlakyTest(bugId = 303903824)
     fun selectionChanges_cursorNotBlinking() {
-        state = TextFieldState("test", initialSelectionInChars = TextRange(2))
+        state = TextFieldState("test", initialSelection = TextRange(2))
         rule.setTestContent {
             BasicTextField(
                 state = state,
@@ -526,9 +522,6 @@ class TextFieldCursorTest : FocusedWindowTest {
         rule.mainClock.advanceTimeBy(500)
         rule.mainClock.advanceTimeByFrame()
 
-        // TODO(b/170298051) check here that cursor is visible when we have a way to control
-        //  cursor position when sending a text
-
         rule.onNode(hasSetTextAction())
             .performTextInputSelection(TextRange(0))
 
@@ -538,6 +531,75 @@ class TextFieldCursorTest : FocusedWindowTest {
         rule.onNode(hasSetTextAction())
             .captureToImage()
             .assertCursor(cursorTopCenterInLtr)
+    }
+
+    @Ignore // b/327235206
+    @Test
+    @SdkSuppress(minSdkVersion = Build.VERSION_CODES.O)
+    fun togglingInnerTextField_whileFocused_cursorContinuesToDraw() {
+        state = TextFieldState("test", initialSelection = TextRange(2))
+        var toggle by mutableStateOf(true)
+        rule.setTestContent {
+            BasicTextField(
+                state = state,
+                textStyle = textStyle,
+                modifier = textFieldModifier,
+                cursorBrush = SolidColor(cursorColor),
+                onTextLayout = onTextLayout,
+                decorator = {
+                    if (toggle) {
+                        Row {
+                            it()
+                        }
+                    } else {
+                        Column {
+                            it()
+                        }
+                    }
+                }
+            )
+        }
+
+        focusAndWait()
+
+        // hide the cursor
+        rule.mainClock.advanceTimeBy(600)
+        rule.mainClock.advanceTimeByFrame()
+
+        // assert no cursor visible
+        rule.onNode(hasSetTextAction())
+            .captureToImage()
+            .assertShape(
+                density = rule.density,
+                shape = RectangleShape,
+                shapeColor = contentColor,
+                backgroundColor = contentColor,
+                shapeOverlapPixelCount = 0.0f
+            )
+
+        toggle = !toggle
+        // necessary for animation to start (shows cursor again)
+        rule.mainClock.advanceTimeByFrame()
+
+        rule.onNode(hasSetTextAction())
+            .captureToImage()
+            .assertCursor(cursorTopCenterInLtr)
+
+        toggle = !toggle
+
+        rule.mainClock.advanceTimeBy(500)
+        rule.mainClock.advanceTimeByFrame()
+
+        // assert no cursor visible
+        rule.onNode(hasSetTextAction())
+            .captureToImage()
+            .assertShape(
+                density = rule.density,
+                shape = RectangleShape,
+                shapeColor = contentColor,
+                backgroundColor = contentColor,
+                shapeOverlapPixelCount = 0.0f
+            )
     }
 
     @Test
@@ -577,7 +639,7 @@ class TextFieldCursorTest : FocusedWindowTest {
     @Test
     @SdkSuppress(minSdkVersion = Build.VERSION_CODES.O)
     fun selectionNotCollapsed_cursorNotDrawn() {
-        state = TextFieldState("test", initialSelectionInChars = TextRange(2, 3))
+        state = TextFieldState("test", initialSelection = TextRange(2, 3))
         rule.setTestContent {
             // set selection highlight to a known color
             CompositionLocalProvider(
@@ -656,7 +718,7 @@ class TextFieldCursorTest : FocusedWindowTest {
     @Test
     @SdkSuppress(minSdkVersion = Build.VERSION_CODES.O)
     fun readOnly_cursorIsNotDrawn() {
-        state = TextFieldState("test", initialSelectionInChars = TextRange(4))
+        state = TextFieldState("test", initialSelection = TextRange(4))
         rule.setTestContent {
             BasicTextField(
                 state = state,
@@ -682,7 +744,7 @@ class TextFieldCursorTest : FocusedWindowTest {
     @SdkSuppress(minSdkVersion = Build.VERSION_CODES.O)
     fun toggling_readOnly_drawsCursorAgain() {
         var readOnly by mutableStateOf(true)
-        state = TextFieldState("test", initialSelectionInChars = TextRange(4))
+        state = TextFieldState("test", initialSelection = TextRange(4))
         rule.setTestContent {
             BasicTextField(
                 state = state,
@@ -804,7 +866,7 @@ class TextFieldCursorTest : FocusedWindowTest {
     @Test
     @SdkSuppress(minSdkVersion = Build.VERSION_CODES.O)
     fun textField_keepsSelection_whenWindowLosesFocus() {
-        state = TextFieldState("hello", initialSelectionInChars = TextRange(0, 5))
+        state = TextFieldState("hello", initialSelection = TextRange(0, 5))
         val selectionColor = Color.Blue
         val focusWindow = mutableStateOf(true)
         val windowInfo = object : WindowInfo {
@@ -844,7 +906,6 @@ class TextFieldCursorTest : FocusedWindowTest {
             .assertContainsColor(selectionColor)
     }
 
-    @Ignore("b/305799612")
     @Test
     @SdkSuppress(minSdkVersion = Build.VERSION_CODES.O)
     fun textField_textDragging_cursorRendered() {
@@ -883,7 +944,6 @@ class TextFieldCursorTest : FocusedWindowTest {
             .assertCursor(cursorTopCenterInLtr)
     }
 
-    @Ignore("b/305799612")
     @Test
     @SdkSuppress(minSdkVersion = Build.VERSION_CODES.O)
     fun textField_textDragging_cursorDisappearsAfterTimeout() {
@@ -928,7 +988,6 @@ class TextFieldCursorTest : FocusedWindowTest {
             )
     }
 
-    @Ignore("b/305799612")
     @Test
     @SdkSuppress(minSdkVersion = Build.VERSION_CODES.O)
     fun textField_textDragging_cursorDoesNotDisappearWhileMoving() {
@@ -978,7 +1037,6 @@ class TextFieldCursorTest : FocusedWindowTest {
             .assertCursor(cursorTopCenterInLtr)
     }
 
-    @Ignore("b/305799612")
     @Test
     @SdkSuppress(minSdkVersion = Build.VERSION_CODES.O)
     fun textField_textDragging_noWindowFocus_cursorRendered() {

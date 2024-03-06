@@ -16,7 +16,7 @@ package androidx.tv.material3 {
     field public static final androidx.tv.material3.AssistChipDefaults INSTANCE;
   }
 
-  @SuppressCompatibility @androidx.compose.runtime.Immutable @androidx.tv.material3.ExperimentalTvMaterial3Api public final class Border {
+  @androidx.compose.runtime.Immutable public final class Border {
     ctor public Border(androidx.compose.foundation.BorderStroke border, optional float inset, optional androidx.compose.ui.graphics.Shape shape);
     method public androidx.tv.material3.Border copy(optional androidx.compose.foundation.BorderStroke? border, optional androidx.compose.ui.unit.Dp? inset, optional androidx.compose.ui.graphics.Shape? shape);
     method public androidx.compose.foundation.BorderStroke getBorder();
@@ -320,8 +320,6 @@ package androidx.tv.material3 {
   }
 
   @SuppressCompatibility @androidx.tv.material3.ExperimentalTvMaterial3Api public enum DrawerValue {
-    method public static androidx.tv.material3.DrawerValue valueOf(String value) throws java.lang.IllegalArgumentException, java.lang.NullPointerException;
-    method public static androidx.tv.material3.DrawerValue[] values();
     enum_constant public static final androidx.tv.material3.DrawerValue Closed;
     enum_constant public static final androidx.tv.material3.DrawerValue Open;
   }
@@ -344,7 +342,7 @@ package androidx.tv.material3 {
     field public static final androidx.tv.material3.FilterChipDefaults INSTANCE;
   }
 
-  @SuppressCompatibility @androidx.compose.runtime.Immutable @androidx.tv.material3.ExperimentalTvMaterial3Api public final class Glow {
+  @androidx.compose.runtime.Immutable public final class Glow {
     ctor public Glow(long elevationColor, float elevation);
     method public androidx.tv.material3.Glow copy(optional androidx.compose.ui.graphics.Color? glowColor, optional androidx.compose.ui.unit.Dp? glowElevation);
     method public float getElevation();
@@ -570,7 +568,7 @@ package androidx.tv.material3 {
     property public final androidx.compose.ui.graphics.Shape shape;
   }
 
-  @SuppressCompatibility @androidx.tv.material3.ExperimentalTvMaterial3Api public final class MaterialTheme {
+  public final class MaterialTheme {
     method @androidx.compose.runtime.Composable @androidx.compose.runtime.ReadOnlyComposable public androidx.tv.material3.ColorScheme getColorScheme();
     method @androidx.compose.runtime.Composable @androidx.compose.runtime.ReadOnlyComposable public androidx.tv.material3.Shapes getShapes();
     method @androidx.compose.runtime.Composable @androidx.compose.runtime.ReadOnlyComposable public androidx.tv.material3.Typography getTypography();
@@ -581,7 +579,7 @@ package androidx.tv.material3 {
   }
 
   public final class MaterialThemeKt {
-    method @SuppressCompatibility @androidx.compose.runtime.Composable @androidx.tv.material3.ExperimentalTvMaterial3Api public static void MaterialTheme(optional androidx.tv.material3.ColorScheme colorScheme, optional androidx.tv.material3.Shapes shapes, optional androidx.tv.material3.Typography typography, kotlin.jvm.functions.Function0<kotlin.Unit> content);
+    method @androidx.compose.runtime.Composable public static void MaterialTheme(optional androidx.tv.material3.ColorScheme colorScheme, optional androidx.tv.material3.Shapes shapes, optional androidx.tv.material3.Typography typography, kotlin.jvm.functions.Function0<kotlin.Unit> content);
   }
 
   @SuppressCompatibility @androidx.compose.runtime.Immutable @androidx.tv.material3.ExperimentalTvMaterial3Api public final class NavigationDrawerItemBorder {
@@ -836,7 +834,7 @@ package androidx.tv.material3 {
   @SuppressCompatibility @androidx.compose.runtime.Immutable @androidx.tv.material3.ExperimentalTvMaterial3Api public final class SelectableChipShape {
   }
 
-  @SuppressCompatibility @androidx.tv.material3.ExperimentalTvMaterial3Api public final class ShapeDefaults {
+  public final class ShapeDefaults {
     method public androidx.compose.foundation.shape.CornerBasedShape getExtraLarge();
     method public androidx.compose.foundation.shape.CornerBasedShape getExtraSmall();
     method public androidx.compose.foundation.shape.CornerBasedShape getLarge();
@@ -850,7 +848,7 @@ package androidx.tv.material3 {
     field public static final androidx.tv.material3.ShapeDefaults INSTANCE;
   }
 
-  @SuppressCompatibility @androidx.compose.runtime.Immutable @androidx.tv.material3.ExperimentalTvMaterial3Api public final class Shapes {
+  @androidx.compose.runtime.Immutable public final class Shapes {
     ctor public Shapes(optional androidx.compose.foundation.shape.CornerBasedShape extraSmall, optional androidx.compose.foundation.shape.CornerBasedShape small, optional androidx.compose.foundation.shape.CornerBasedShape medium, optional androidx.compose.foundation.shape.CornerBasedShape large, optional androidx.compose.foundation.shape.CornerBasedShape extraLarge);
     method public androidx.tv.material3.Shapes copy(optional androidx.compose.foundation.shape.CornerBasedShape extraSmall, optional androidx.compose.foundation.shape.CornerBasedShape small, optional androidx.compose.foundation.shape.CornerBasedShape medium, optional androidx.compose.foundation.shape.CornerBasedShape large, optional androidx.compose.foundation.shape.CornerBasedShape extraLarge);
     method public androidx.compose.foundation.shape.CornerBasedShape getExtraLarge();
@@ -933,11 +931,11 @@ package androidx.tv.material3 {
   }
 
   public final class TextKt {
-    method @SuppressCompatibility @androidx.compose.runtime.Composable @androidx.tv.material3.ExperimentalTvMaterial3Api public static void ProvideTextStyle(androidx.compose.ui.text.TextStyle value, kotlin.jvm.functions.Function0<kotlin.Unit> content);
+    method @androidx.compose.runtime.Composable public static void ProvideTextStyle(androidx.compose.ui.text.TextStyle value, kotlin.jvm.functions.Function0<kotlin.Unit> content);
     method @SuppressCompatibility @androidx.compose.runtime.Composable @androidx.tv.material3.ExperimentalTvMaterial3Api public static void Text(androidx.compose.ui.text.AnnotatedString text, optional androidx.compose.ui.Modifier modifier, optional long color, optional long fontSize, optional androidx.compose.ui.text.font.FontStyle? fontStyle, optional androidx.compose.ui.text.font.FontWeight? fontWeight, optional androidx.compose.ui.text.font.FontFamily? fontFamily, optional long letterSpacing, optional androidx.compose.ui.text.style.TextDecoration? textDecoration, optional int textAlign, optional long lineHeight, optional int overflow, optional boolean softWrap, optional int maxLines, optional java.util.Map<java.lang.String,androidx.compose.foundation.text.InlineTextContent> inlineContent, optional kotlin.jvm.functions.Function1<? super androidx.compose.ui.text.TextLayoutResult,kotlin.Unit> onTextLayout, optional androidx.compose.ui.text.TextStyle style);
     method @SuppressCompatibility @androidx.compose.runtime.Composable @androidx.tv.material3.ExperimentalTvMaterial3Api public static void Text(String text, optional androidx.compose.ui.Modifier modifier, optional long color, optional long fontSize, optional androidx.compose.ui.text.font.FontStyle? fontStyle, optional androidx.compose.ui.text.font.FontWeight? fontWeight, optional androidx.compose.ui.text.font.FontFamily? fontFamily, optional long letterSpacing, optional androidx.compose.ui.text.style.TextDecoration? textDecoration, optional int textAlign, optional long lineHeight, optional int overflow, optional boolean softWrap, optional int maxLines, optional kotlin.jvm.functions.Function1<? super androidx.compose.ui.text.TextLayoutResult,kotlin.Unit> onTextLayout, optional androidx.compose.ui.text.TextStyle style);
-    method @SuppressCompatibility @androidx.tv.material3.ExperimentalTvMaterial3Api public static androidx.compose.runtime.ProvidableCompositionLocal<androidx.compose.ui.text.TextStyle> getLocalTextStyle();
-    property @SuppressCompatibility @androidx.tv.material3.ExperimentalTvMaterial3Api public static final androidx.compose.runtime.ProvidableCompositionLocal<androidx.compose.ui.text.TextStyle> LocalTextStyle;
+    method public static androidx.compose.runtime.ProvidableCompositionLocal<androidx.compose.ui.text.TextStyle> getLocalTextStyle();
+    property public static final androidx.compose.runtime.ProvidableCompositionLocal<androidx.compose.ui.text.TextStyle> LocalTextStyle;
   }
 
   @SuppressCompatibility @androidx.compose.runtime.Immutable @androidx.tv.material3.ExperimentalTvMaterial3Api public final class ToggleableSurfaceBorder {

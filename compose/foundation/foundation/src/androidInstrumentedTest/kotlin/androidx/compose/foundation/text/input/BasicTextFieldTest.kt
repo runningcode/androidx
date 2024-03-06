@@ -31,7 +31,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.BasicTextField2
 import androidx.compose.foundation.text.KeyboardHelper
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.TEST_FONT_FAMILY
@@ -180,26 +179,6 @@ internal class BasicTextFieldTest {
 
         rule.onNodeWithTag(Tag).assertTextEquals("Hello World!")
         assertTextSelection(TextRange("Hello World!".length))
-    }
-
-    @Test
-    fun stringValue_textChange_updatesState() {
-        var state by mutableStateOf("Hello ")
-        inputMethodInterceptor.setTextFieldTestContent {
-            BasicTextField2(
-                value = state,
-                onValueChange = { state = it },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .testTag(Tag)
-            )
-        }
-
-        rule.onNodeWithTag(Tag).performTextInput("World!")
-
-        rule.runOnIdle {
-            assertThat(state).isEqualTo("Hello World!")
-        }
     }
 
     /**
@@ -1117,169 +1096,6 @@ internal class BasicTextFieldTest {
         assertThat(secondSize.height).isEqualTo(firstSize.height * 2)
     }
 
-    @Test
-    fun stringValue_updatesFieldText_whenTextChangedFromCode_whileUnfocused() {
-        var text by mutableStateOf("hello")
-        inputMethodInterceptor.setTextFieldTestContent {
-            BasicTextField2(
-                value = text,
-                onValueChange = { text = it },
-                modifier = Modifier.testTag(Tag)
-            )
-        }
-
-        rule.runOnIdle {
-            text = "world"
-        }
-
-        rule.onNodeWithTag(Tag).assertTextEquals("world")
-    }
-
-    @Test
-    fun stringValue_doesNotUpdateField_whenTextChangedFromCode_whileFocused() {
-        var text by mutableStateOf("hello")
-        inputMethodInterceptor.setTextFieldTestContent {
-            BasicTextField2(
-                value = text,
-                onValueChange = { text = it },
-                modifier = Modifier.testTag(Tag)
-            )
-        }
-        requestFocus(Tag)
-
-        rule.runOnIdle {
-            text = "world"
-        }
-
-        rule.onNodeWithTag(Tag).assertTextEquals("hello")
-    }
-
-    @Test
-    fun stringValue_doesNotInvokeCallback_onFocus() {
-        var text by mutableStateOf("")
-        var onValueChangedCount = 0
-        inputMethodInterceptor.setTextFieldTestContent {
-            BasicTextField2(
-                value = text,
-                onValueChange = {
-                    text = it
-                    onValueChangedCount++
-                },
-                modifier = Modifier.testTag(Tag)
-            )
-        }
-        assertThat(onValueChangedCount).isEqualTo(0)
-
-        requestFocus(Tag)
-
-        rule.runOnIdle {
-            assertThat(onValueChangedCount).isEqualTo(0)
-        }
-    }
-
-    @Test
-    fun stringValue_doesNotInvokeCallback_whenOnlySelectionChanged() {
-        var text by mutableStateOf("")
-        var onValueChangedCount = 0
-        inputMethodInterceptor.setTextFieldTestContent {
-            BasicTextField2(
-                value = text,
-                onValueChange = {
-                    text = it
-                    onValueChangedCount++
-                },
-                modifier = Modifier.testTag(Tag)
-            )
-        }
-        requestFocus(Tag)
-        assertThat(onValueChangedCount).isEqualTo(0)
-
-        // Act: wiggle the cursor around a bit.
-        rule.onNodeWithTag(Tag).performTextInputSelection(TextRange(0))
-        rule.onNodeWithTag(Tag).performTextInputSelection(TextRange(5))
-
-        rule.runOnIdle {
-            assertThat(onValueChangedCount).isEqualTo(0)
-        }
-    }
-
-    @Test
-    fun stringValue_doesNotInvokeCallback_whenOnlyCompositionChanged() {
-        var text by mutableStateOf("")
-        var onValueChangedCount = 0
-        inputMethodInterceptor.setTextFieldTestContent {
-            BasicTextField2(
-                value = text,
-                onValueChange = {
-                    text = it
-                    onValueChangedCount++
-                },
-                modifier = Modifier.testTag(Tag)
-            )
-        }
-        requestFocus(Tag)
-        assertThat(onValueChangedCount).isEqualTo(0)
-
-        // Act: wiggle the composition around a bit
-        inputMethodInterceptor.withInputConnection { setComposingRegion(0, 0) }
-        inputMethodInterceptor.withInputConnection { setComposingRegion(3, 5) }
-
-        rule.runOnIdle {
-            assertThat(onValueChangedCount).isEqualTo(0)
-        }
-    }
-
-    @Test
-    fun stringValue_doesNotInvokeCallback_whenTextChangedFromCode_whileUnfocused() {
-        var text by mutableStateOf("")
-        var onValueChangedCount = 0
-        inputMethodInterceptor.setTextFieldTestContent {
-            BasicTextField2(
-                value = text,
-                onValueChange = {
-                    text = it
-                    onValueChangedCount++
-                },
-                modifier = Modifier.testTag(Tag)
-            )
-        }
-        assertThat(onValueChangedCount).isEqualTo(0)
-
-        rule.runOnIdle {
-            text = "hello"
-        }
-
-        rule.runOnIdle {
-            assertThat(onValueChangedCount).isEqualTo(0)
-        }
-    }
-
-    @Test
-    fun stringValue_doesNotInvokeCallback_whenTextChangedFromCode_whileFocused() {
-        var text by mutableStateOf("")
-        var onValueChangedCount = 0
-        inputMethodInterceptor.setTextFieldTestContent {
-            BasicTextField2(
-                value = text,
-                onValueChange = {
-                    text = it
-                    onValueChangedCount++
-                },
-                modifier = Modifier.testTag(Tag)
-            )
-        }
-        assertThat(onValueChangedCount).isEqualTo(0)
-        requestFocus(Tag)
-
-        rule.runOnIdle {
-            text = "hello"
-        }
-
-        rule.runOnIdle {
-            assertThat(onValueChangedCount).isEqualTo(0)
-        }
-    }
-
     // Regression test for b/311834126
     @Test
     fun whenPastingTextThatIncreasesEndOffset_noCrashAndCursorAtEndOfPastedText() {
@@ -1318,7 +1134,7 @@ internal class BasicTextFieldTest {
         rule.waitForIdle()
 
         assertThat(tfs.text.toString()).isEqualTo(longText)
-        assertThat(tfs.text.selectionInChars).isEqualTo(TextRange(longText.length))
+        assertThat(tfs.text.selection).isEqualTo(TextRange(longText.length))
     }
 
     @Test
@@ -1339,7 +1155,7 @@ internal class BasicTextFieldTest {
         }
 
         rule.runOnIdle {
-            assertThat(state.text.selectionInChars).isEqualTo(TextRange(0, 5))
+            assertThat(state.text.selection).isEqualTo(TextRange(0, 5))
             assertThat(imm.expectCall("updateSelection(0, 5, -1, -1)"))
         }
     }
@@ -1347,7 +1163,7 @@ internal class BasicTextFieldTest {
     @Test
     fun cut_contextMenuAction_cutsIntoClipboard() {
         val clipboardManager = FakeClipboardManager("World")
-        val state = TextFieldState("Hello", initialSelectionInChars = TextRange(0, 2))
+        val state = TextFieldState("Hello", initialSelection = TextRange(0, 2))
         inputMethodInterceptor.setTextFieldTestContent {
             CompositionLocalProvider(LocalClipboardManager provides clipboardManager) {
                 BasicTextField(
@@ -1372,7 +1188,7 @@ internal class BasicTextFieldTest {
     @Test
     fun copy_contextMenuAction_copiesIntoClipboard() {
         val clipboardManager = FakeClipboardManager("World")
-        val state = TextFieldState("Hello", initialSelectionInChars = TextRange(0, 2))
+        val state = TextFieldState("Hello", initialSelection = TextRange(0, 2))
         inputMethodInterceptor.setTextFieldTestContent {
             CompositionLocalProvider(LocalClipboardManager provides clipboardManager) {
                 BasicTextField(
@@ -1396,7 +1212,7 @@ internal class BasicTextFieldTest {
     @Test
     fun paste_contextMenuAction_pastesFromClipboard() {
         val clipboardManager = FakeClipboardManager("World")
-        val state = TextFieldState("Hello", initialSelectionInChars = TextRange(0, 4))
+        val state = TextFieldState("Hello", initialSelection = TextRange(0, 4))
         inputMethodInterceptor.setTextFieldTestContent {
             CompositionLocalProvider(LocalClipboardManager provides clipboardManager) {
                 BasicTextField(
@@ -1414,7 +1230,7 @@ internal class BasicTextFieldTest {
 
         rule.runOnIdle {
             assertThat(state.text.toString()).isEqualTo("Worldo")
-            assertThat(state.text.selectionInChars).isEqualTo(TextRange(5))
+            assertThat(state.text.selection).isEqualTo(TextRange(5))
         }
     }
 

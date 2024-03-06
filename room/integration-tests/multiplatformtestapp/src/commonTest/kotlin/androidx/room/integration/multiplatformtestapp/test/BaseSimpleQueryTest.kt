@@ -16,6 +16,7 @@
 
 package androidx.room.integration.multiplatformtestapp.test
 
+import androidx.kruth.assertThat
 import androidx.kruth.assertThrows
 import kotlin.test.Test
 import kotlinx.coroutines.test.runTest
@@ -25,10 +26,105 @@ abstract class BaseSimpleQueryTest {
     abstract fun getRoomDatabase(): SampleDatabase
 
     @Test
+    fun preparedInsertAndDelete() = runTest {
+        val dao = getRoomDatabase().dao()
+        assertThat(dao.insertItem(1)).isEqualTo(1)
+        assertThat(dao.getSingleItem().pk).isEqualTo(1)
+        assertThat(dao.deleteItem(1)).isEqualTo(1)
+        assertThat(dao.deleteItem(1)).isEqualTo(0) // Nothing deleted
+        assertThrows<IllegalStateException> {
+            dao.getSingleItem()
+        }.hasMessageThat().contains("The query result was empty")
+    }
+
+    @Test
     fun emptyResult() = runTest {
         val db = getRoomDatabase()
         assertThrows<IllegalStateException> {
             db.dao().getSingleItem()
+        }.hasMessageThat().contains("The query result was empty")
+    }
+
+    @Test
+    fun queryList() = runTest {
+        val dao = getRoomDatabase().dao()
+        dao.insertItem(1)
+        dao.insertItem(2)
+        dao.insertItem(3)
+        val result = dao.getItemList()
+        assertThat(result.map { it.pk }).containsExactly(1L, 2L, 3L)
+    }
+
+    @Test
+    fun transactionDelegate() = runTest {
+        val dao = getRoomDatabase().dao()
+        dao.insertItem(1)
+        dao.insertItem(2)
+        dao.insertItem(3)
+
+        // Perform multiple delete transaction with error so delete is not committed
+        assertThrows<IllegalArgumentException> {
+            dao.deleteList(
+                pks = listOf(1L, 2L, 3L),
+                withError = true
+            )
+        }
+        assertThat(dao.getItemList().map { it.pk }).containsExactly(1L, 2L, 3L)
+
+        // Perform multiple delete in transaction successfully
+        dao.deleteList(
+            pks = listOf(1L, 3L),
+        )
+        assertThat(dao.getItemList().map { it.pk }).containsExactly(2L)
+    }
+
+    @Test
+    fun simpleInsertAndDelete() = runTest {
+        val sampleEntity = SampleEntity(1, 1)
+        val dao = getRoomDatabase().dao()
+
+        dao.insert(sampleEntity)
+        assertThat(dao.getSingleItemWithColumn().pk).isEqualTo(1)
+
+        dao.delete(sampleEntity)
+        assertThrows<IllegalStateException> {
+            dao.getSingleItemWithColumn()
+        }.hasMessageThat().contains("The query result was empty")
+    }
+
+    @Test
+    fun simpleInsertAndUpdateAndDelete() = runTest {
+        val sampleEntity1 = SampleEntity(1, 1)
+        val sampleEntity2 = SampleEntity(1, 2)
+        val dao = getRoomDatabase().dao()
+
+        dao.insert(sampleEntity1)
+        assertThat(dao.getSingleItemWithColumn().data).isEqualTo(1)
+
+        dao.update(sampleEntity2)
+        assertThat(dao.getSingleItemWithColumn().data).isEqualTo(2)
+
+        dao.delete(sampleEntity2)
+        assertThrows<IllegalStateException> {
+            dao.getSingleItem()
+        }.hasMessageThat().contains("The query result was empty")
+    }
+
+    @Test
+    fun simpleInsertAndUpsertAndDelete() = runTest {
+        val sampleEntity1 = SampleEntity(1, 1)
+        val sampleEntity2 = SampleEntity(1, 2)
+        val dao = getRoomDatabase().dao()
+
+        dao.insert(sampleEntity1)
+        assertThat(dao.getSingleItemWithColumn().data).isEqualTo(1)
+
+        dao.upsert(sampleEntity2)
+        assertThat(dao.getSingleItemWithColumn().data).isEqualTo(2)
+
+        dao.delete(sampleEntity2)
+        assertThrows<IllegalStateException> {
+            dao.getSingleItem()
         }.hasMessageThat().contains("The query result was empty")
     }
 }

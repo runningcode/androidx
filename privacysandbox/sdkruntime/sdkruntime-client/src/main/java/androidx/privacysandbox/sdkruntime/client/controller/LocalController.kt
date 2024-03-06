@@ -23,6 +23,7 @@ import androidx.privacysandbox.sdkruntime.core.AppOwnedSdkSandboxInterfaceCompat
 import androidx.privacysandbox.sdkruntime.core.LoadSdkCompatException
 import androidx.privacysandbox.sdkruntime.core.SandboxedSdkCompat
 import androidx.privacysandbox.sdkruntime.core.activity.SdkSandboxActivityHandlerCompat
+import androidx.privacysandbox.sdkruntime.core.controller.LoadSdkCallback
 import androidx.privacysandbox.sdkruntime.core.controller.SdkSandboxControllerCompat
 import java.util.concurrent.Executor
 
@@ -31,7 +32,7 @@ import java.util.concurrent.Executor
  */
 internal class LocalController(
     private val sdkPackageName: String,
-    private val locallyLoadedSdks: LocallyLoadedSdks,
+    private val localSdkRegistry: SdkRegistry,
     private val appOwnedSdkRegistry: AppOwnedSdkRegistry
 ) : SdkSandboxControllerCompat.SandboxControllerImpl {
 
@@ -39,20 +40,22 @@ internal class LocalController(
         sdkName: String,
         params: Bundle,
         executor: Executor,
-        callback: SdkSandboxControllerCompat.LoadSdkCallback
+        callback: LoadSdkCallback
     ) {
-        executor.execute {
-            callback.onError(
-                LoadSdkCompatException(
-                    LoadSdkCompatException.LOAD_SDK_INTERNAL_ERROR,
-                    "Shouldn't be called"
-                )
-            )
+        try {
+            val result = localSdkRegistry.loadSdk(sdkName, params)
+            executor.execute {
+                callback.onResult(result)
+            }
+        } catch (ex: LoadSdkCompatException) {
+            executor.execute {
+                callback.onError(ex)
+            }
         }
     }
 
     override fun getSandboxedSdks(): List<SandboxedSdkCompat> {
-        return locallyLoadedSdks.getLoadedSdks()
+        return localSdkRegistry.getLoadedSdks()
     }
 
     override fun getAppOwnedSdkSandboxInterfaces(): List<AppOwnedSdkSandboxInterfaceCompat> =

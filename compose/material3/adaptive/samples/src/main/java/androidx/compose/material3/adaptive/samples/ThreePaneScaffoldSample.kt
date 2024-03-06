@@ -47,7 +47,8 @@ import androidx.compose.ui.unit.dp
 fun ListDetailPaneScaffoldSample() {
     val scaffoldNavigator = rememberListDetailPaneScaffoldNavigator<Nothing>()
     ListDetailPaneScaffold(
-        scaffoldState = scaffoldNavigator.scaffoldState,
+        directive = scaffoldNavigator.scaffoldDirective,
+        value = scaffoldNavigator.scaffoldValue,
         listPane = {
             AnimatedPane(
                 modifier = Modifier.preferredWidth(200.dp),
@@ -62,18 +63,19 @@ fun ListDetailPaneScaffoldSample() {
                 }
             }
         },
-    ) {
-        AnimatedPane(modifier = Modifier) {
-            Surface(
-                color = MaterialTheme.colorScheme.primary,
-                onClick = {
-                    scaffoldNavigator.navigateBack()
+        detailPane = {
+            AnimatedPane(modifier = Modifier) {
+                Surface(
+                    color = MaterialTheme.colorScheme.primary,
+                    onClick = {
+                        scaffoldNavigator.navigateBack()
+                    }
+                ) {
+                    Text("Details")
                 }
-            ) {
-                Text("Details")
             }
         }
-    }
+    )
 }
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
@@ -83,7 +85,8 @@ fun ListDetailPaneScaffoldSample() {
 fun ListDetailPaneScaffoldSampleWithExtraPane() {
     val scaffoldNavigator = rememberListDetailPaneScaffoldNavigator<Nothing>()
     ListDetailPaneScaffold(
-        scaffoldState = scaffoldNavigator.scaffoldState,
+        directive = scaffoldNavigator.scaffoldDirective,
+        value = scaffoldNavigator.scaffoldValue,
         listPane = {
             AnimatedPane(
                 modifier = Modifier.preferredWidth(200.dp),
@@ -95,6 +98,59 @@ fun ListDetailPaneScaffoldSampleWithExtraPane() {
                     }
                 ) {
                     Text("List")
+                }
+            }
+        },
+        detailPane = {
+            AnimatedPane(
+                modifier = Modifier
+            ) {
+                Surface(
+                    color = MaterialTheme.colorScheme.primary,
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Text("Detail")
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Surface(
+                                onClick = {
+                                    scaffoldNavigator.navigateBack()
+                                },
+                                modifier = Modifier
+                                    .weight(0.5f)
+                                    .fillMaxHeight(),
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                            ) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("Previous")
+                                }
+                            }
+                            VerticalDivider()
+                            Surface(
+                                onClick = {
+                                    scaffoldNavigator.navigateTo(ListDetailPaneScaffoldRole.Extra)
+                                },
+                                modifier = Modifier
+                                    .weight(0.5f)
+                                    .fillMaxHeight(),
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                            ) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("Next")
+                                }
+                            }
+                        }
+                    }
                 }
             }
         },
@@ -113,57 +169,5 @@ fun ListDetailPaneScaffoldSampleWithExtraPane() {
                 }
             }
         }
-    ) {
-        AnimatedPane(
-            modifier = Modifier
-        ) {
-            Surface(
-                color = MaterialTheme.colorScheme.primary,
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text("Detail")
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Surface(
-                            onClick = {
-                                scaffoldNavigator.navigateBack()
-                            },
-                            modifier = Modifier
-                                .weight(0.5f)
-                                .fillMaxHeight(),
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-                        ) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("Previous")
-                            }
-                        }
-                        VerticalDivider()
-                        Surface(
-                            onClick = {
-                                scaffoldNavigator.navigateTo(ListDetailPaneScaffoldRole.Extra)
-                            },
-                            modifier = Modifier
-                                .weight(0.5f)
-                                .fillMaxHeight(),
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-                        ) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("Next")
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+    )
 }

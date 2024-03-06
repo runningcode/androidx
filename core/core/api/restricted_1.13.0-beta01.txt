@@ -1759,12 +1759,14 @@ package androidx.core.graphics {
     method public static boolean setBlendMode(android.graphics.Paint, androidx.core.graphics.BlendModeCompat?);
   }
 
-  public class PathParser {
+  public final class PathParser {
     method public static boolean canMorph(androidx.core.graphics.PathParser.PathDataNode![]?, androidx.core.graphics.PathParser.PathDataNode![]?);
     method public static androidx.core.graphics.PathParser.PathDataNode![] createNodesFromPathData(String);
     method public static android.graphics.Path createPathFromPathData(String);
     method public static androidx.core.graphics.PathParser.PathDataNode![] deepCopyNodes(androidx.core.graphics.PathParser.PathDataNode![]);
-    method public static boolean interpolatePathDataNodes(androidx.core.graphics.PathParser.PathDataNode![], androidx.core.graphics.PathParser.PathDataNode![], androidx.core.graphics.PathParser.PathDataNode![], float);
+    method @Deprecated @RestrictTo(androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP_PREFIX) public static boolean interpolatePathDataNodes(androidx.core.graphics.PathParser.PathDataNode![], androidx.core.graphics.PathParser.PathDataNode![], androidx.core.graphics.PathParser.PathDataNode![], float);
+    method public static void interpolatePathDataNodes(androidx.core.graphics.PathParser.PathDataNode![], float, androidx.core.graphics.PathParser.PathDataNode![], androidx.core.graphics.PathParser.PathDataNode![]);
+    method public static void nodesToPath(androidx.core.graphics.PathParser.PathDataNode![], android.graphics.Path);
     method public static void updateNodes(androidx.core.graphics.PathParser.PathDataNode![], androidx.core.graphics.PathParser.PathDataNode![]);
   }
 
@@ -1772,7 +1774,7 @@ package androidx.core.graphics {
     method public float[] getParams();
     method public char getType();
     method public void interpolatePathDataNode(androidx.core.graphics.PathParser.PathDataNode, androidx.core.graphics.PathParser.PathDataNode, float);
-    method public static void nodesToPath(androidx.core.graphics.PathParser.PathDataNode![], android.graphics.Path);
+    method @Deprecated @RestrictTo(androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP_PREFIX) public static void nodesToPath(androidx.core.graphics.PathParser.PathDataNode![], android.graphics.Path);
   }
 
   public final class PathSegment {
@@ -1962,9 +1964,9 @@ package androidx.core.hardware.display {
 
 package androidx.core.hardware.fingerprint {
 
-  @Deprecated public class FingerprintManagerCompat {
+  @Deprecated @RestrictTo(androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP_PREFIX) public class FingerprintManagerCompat {
     method @Deprecated @RequiresPermission(android.Manifest.permission.USE_FINGERPRINT) public void authenticate(androidx.core.hardware.fingerprint.FingerprintManagerCompat.CryptoObject?, int, android.os.CancellationSignal?, androidx.core.hardware.fingerprint.FingerprintManagerCompat.AuthenticationCallback, android.os.Handler?);
-    method @Deprecated @RequiresPermission(android.Manifest.permission.USE_FINGERPRINT) public void authenticate(androidx.core.hardware.fingerprint.FingerprintManagerCompat.CryptoObject?, int, androidx.core.os.CancellationSignal?, androidx.core.hardware.fingerprint.FingerprintManagerCompat.AuthenticationCallback, android.os.Handler?);
+    method @Deprecated @RequiresPermission(android.Manifest.permission.USE_FINGERPRINT) @RestrictTo(androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP_PREFIX) public void authenticate(androidx.core.hardware.fingerprint.FingerprintManagerCompat.CryptoObject?, int, androidx.core.os.CancellationSignal?, androidx.core.hardware.fingerprint.FingerprintManagerCompat.AuthenticationCallback, android.os.Handler?);
     method @Deprecated public static androidx.core.hardware.fingerprint.FingerprintManagerCompat from(android.content.Context);
     method @Deprecated @RequiresPermission(android.Manifest.permission.USE_FINGERPRINT) public boolean hasEnrolledFingerprints();
     method @Deprecated @RequiresPermission(android.Manifest.permission.USE_FINGERPRINT) public boolean isHardwareDetected();
@@ -1972,15 +1974,15 @@ package androidx.core.hardware.fingerprint {
 
   @Deprecated public abstract static class FingerprintManagerCompat.AuthenticationCallback {
     ctor @Deprecated public FingerprintManagerCompat.AuthenticationCallback();
-    method @Deprecated public void onAuthenticationError(int, CharSequence!);
+    method @Deprecated public void onAuthenticationError(int, CharSequence);
     method @Deprecated public void onAuthenticationFailed();
-    method @Deprecated public void onAuthenticationHelp(int, CharSequence!);
-    method @Deprecated public void onAuthenticationSucceeded(androidx.core.hardware.fingerprint.FingerprintManagerCompat.AuthenticationResult!);
+    method @Deprecated public void onAuthenticationHelp(int, CharSequence);
+    method @Deprecated public void onAuthenticationSucceeded(androidx.core.hardware.fingerprint.FingerprintManagerCompat.AuthenticationResult);
   }
 
   @Deprecated public static final class FingerprintManagerCompat.AuthenticationResult {
-    ctor @Deprecated public FingerprintManagerCompat.AuthenticationResult(androidx.core.hardware.fingerprint.FingerprintManagerCompat.CryptoObject!);
-    method @Deprecated public androidx.core.hardware.fingerprint.FingerprintManagerCompat.CryptoObject! getCryptoObject();
+    ctor @Deprecated public FingerprintManagerCompat.AuthenticationResult(androidx.core.hardware.fingerprint.FingerprintManagerCompat.CryptoObject);
+    method @Deprecated public androidx.core.hardware.fingerprint.FingerprintManagerCompat.CryptoObject getCryptoObject();
   }
 
   @Deprecated public static class FingerprintManagerCompat.CryptoObject {
@@ -3073,15 +3075,15 @@ package androidx.core.view {
     method @Deprecated public android.view.View! onCreateView(android.view.View!, String!, android.content.Context!, android.util.AttributeSet!);
   }
 
-  public final class MarginLayoutParamsCompat {
-    method public static int getLayoutDirection(android.view.ViewGroup.MarginLayoutParams);
-    method public static int getMarginEnd(android.view.ViewGroup.MarginLayoutParams);
-    method public static int getMarginStart(android.view.ViewGroup.MarginLayoutParams);
-    method public static boolean isMarginRelative(android.view.ViewGroup.MarginLayoutParams);
-    method public static void resolveLayoutDirection(android.view.ViewGroup.MarginLayoutParams, int);
-    method public static void setLayoutDirection(android.view.ViewGroup.MarginLayoutParams, int);
-    method public static void setMarginEnd(android.view.ViewGroup.MarginLayoutParams, int);
-    method public static void setMarginStart(android.view.ViewGroup.MarginLayoutParams, int);
+  @Deprecated public final class MarginLayoutParamsCompat {
+    method @Deprecated public static int getLayoutDirection(android.view.ViewGroup.MarginLayoutParams);
+    method @Deprecated public static int getMarginEnd(android.view.ViewGroup.MarginLayoutParams);
+    method @Deprecated public static int getMarginStart(android.view.ViewGroup.MarginLayoutParams);
+    method @Deprecated public static boolean isMarginRelative(android.view.ViewGroup.MarginLayoutParams);
+    method @Deprecated public static void resolveLayoutDirection(android.view.ViewGroup.MarginLayoutParams, int);
+    method @Deprecated public static void setLayoutDirection(android.view.ViewGroup.MarginLayoutParams, int);
+    method @Deprecated public static void setMarginEnd(android.view.ViewGroup.MarginLayoutParams, int);
+    method @Deprecated public static void setMarginStart(android.view.ViewGroup.MarginLayoutParams, int);
   }
 
   public final class MenuCompat {

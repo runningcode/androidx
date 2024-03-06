@@ -20,7 +20,6 @@
 package androidx.room.util
 
 import androidx.annotation.RestrictTo
-import androidx.room.PooledConnection
 import androidx.room.RoomDatabase
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
@@ -28,6 +27,9 @@ import androidx.sqlite.use
 import kotlin.jvm.JvmMultifileClass
 import kotlin.jvm.JvmName
 
+/**
+ * Performs a database operation.
+ */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
 expect suspend fun <R> performSuspending(
     db: RoomDatabase,
@@ -35,6 +37,16 @@ expect suspend fun <R> performSuspending(
     inTransaction: Boolean,
     block: (SQLiteConnection) -> R
 ): R
+
+/**
+ * Utility function to wrap a suspend block in Room's transaction coroutine.
+ *
+ * This function should only be invoked from generated code and is needed to support `@Transaction`
+ * delegates in Java and Kotlin. It is preferred to use the other 'perform' functions.
+ */
+// TODO(b/309996304): Replace with proper suspending transaction API for common.
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
+expect suspend fun <R> performInTransactionSuspending(db: RoomDatabase, block: suspend () -> R): R
 
 /**
  * Drops all FTS content sync triggers created by Room.
@@ -58,35 +70,5 @@ fun dropFtsSyncTriggers(connection: SQLiteConnection) {
         if (triggerName.startsWith("room_fts_content_sync_")) {
             connection.execSQL("DROP TRIGGER IF EXISTS $triggerName")
         }
-    }
-}
-
-/**
- * Returns the ROWID of the last row insert from the database connection which invoked the
- * function.
- *
- * See (official SQLite documentation)[http://www.sqlite.org/lang_corefunc.html#last_insert_rowid]
- * for details.
- */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
-suspend fun PooledConnection.getLastInsertedRowId(): Long {
-    return this.usePrepared("SELECT last_insert_rowid()") {
-        it.step()
-        it.getLong(0)
-    }
-}
-
-/**
- * Returns the number of database rows that were changed or inserted or deleted by the most
- * recently completed INSERT, DELETE, or UPDATE statement.
- *
- * See the (official SQLite documentation)[http://www.sqlite.org/lang_corefunc.html#changes] for
- * details.
- */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
-suspend fun PooledConnection.getTotalChangedRows(): Long {
-    return this.usePrepared("SELECT changes()") {
-        it.step()
-        it.getLong(0)
     }
 }

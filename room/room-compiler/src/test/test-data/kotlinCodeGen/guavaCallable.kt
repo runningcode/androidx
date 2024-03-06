@@ -31,9 +31,9 @@ public class MyDao_Impl(
 
   private val __insertionAdapterOfMyEntity: EntityInsertionAdapter<MyEntity>
 
-  private val __deletionAdapterOfMyEntity: EntityDeletionOrUpdateAdapter<MyEntity>
+  private val __deleteCompatAdapterOfMyEntity: EntityDeletionOrUpdateAdapter<MyEntity>
 
-  private val __updateAdapterOfMyEntity: EntityDeletionOrUpdateAdapter<MyEntity>
+  private val __updateCompatAdapterOfMyEntity: EntityDeletionOrUpdateAdapter<MyEntity>
 
   private val __upsertionAdapterOfMyEntity: EntityUpsertionAdapter<MyEntity>
   init {
@@ -47,14 +47,14 @@ public class MyDao_Impl(
         statement.bindString(2, entity.other)
       }
     }
-    this.__deletionAdapterOfMyEntity = object : EntityDeletionOrUpdateAdapter<MyEntity>(__db) {
+    this.__deleteCompatAdapterOfMyEntity = object : EntityDeletionOrUpdateAdapter<MyEntity>(__db) {
       protected override fun createQuery(): String = "DELETE FROM `MyEntity` WHERE `pk` = ?"
 
       protected override fun bind(statement: SupportSQLiteStatement, entity: MyEntity) {
         statement.bindLong(1, entity.pk.toLong())
       }
     }
-    this.__updateAdapterOfMyEntity = object : EntityDeletionOrUpdateAdapter<MyEntity>(__db) {
+    this.__updateCompatAdapterOfMyEntity = object : EntityDeletionOrUpdateAdapter<MyEntity>(__db) {
       protected override fun createQuery(): String =
           "UPDATE OR ABORT `MyEntity` SET `pk` = ?,`other` = ? WHERE `pk` = ?"
 
@@ -106,7 +106,7 @@ public class MyDao_Impl(
       var _total: Int = 0
       __db.beginTransaction()
       try {
-        _total += __deletionAdapterOfMyEntity.handle(entity)
+        _total += __deleteCompatAdapterOfMyEntity.handle(entity)
         __db.setTransactionSuccessful()
         return _total
       } finally {
@@ -121,7 +121,7 @@ public class MyDao_Impl(
       var _total: Int = 0
       __db.beginTransaction()
       try {
-        _total += __updateAdapterOfMyEntity.handle(entity)
+        _total += __updateCompatAdapterOfMyEntity.handle(entity)
         __db.setTransactionSuccessful()
         return _total
       } finally {

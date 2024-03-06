@@ -18,9 +18,10 @@ package androidx.compose.material3.adaptive.benchmark
 
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
+import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldDefaults
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldDestinationItem
-import androidx.compose.material3.adaptive.layout.calculateListDetailPaneScaffoldState
+import androidx.compose.material3.adaptive.layout.calculateThreePaneScaffoldValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -174,14 +175,15 @@ internal open class ListDetailPaneScaffoldTestCase(
     @Composable
     override fun MeasuredContent() {
         ListDetailPaneScaffold(
-            scaffoldState = calculateListDetailPaneScaffoldState(
-                scaffoldDirective = currentScaffoldDirective,
+            directive = currentScaffoldDirective,
+            value = calculateThreePaneScaffoldValue(
+                maxHorizontalPartitions = currentScaffoldDirective.maxHorizontalPartitions,
+                adaptStrategies = ListDetailPaneScaffoldDefaults.adaptStrategies(),
                 currentDestination = currentDestination
             ),
             listPane = { TestPane(Color.Red) },
+            detailPane = { TestPane(Color.Yellow) },
             extraPane = { TestPane(Color.Blue) }
-        ) {
-            TestPane(Color.Yellow)
-        }
+        )
     }
 }

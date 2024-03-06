@@ -25,7 +25,7 @@ import androidx.compose.ui.text.coerceIn
  * An immutable snapshot of the contents of a [TextFieldState].
  *
  * This class is a [CharSequence] and directly represents the text being edited. It also stores
- * the current [selectionInChars] of the field, which may either represent the cursor (if the
+ * the current [selection] of the field, which may either represent the cursor (if the
  * selection is [collapsed][TextRange.collapsed]) or the selection range.
  *
  * This class also may contain the range being composed by the IME, if any, although this is not
@@ -33,13 +33,13 @@ import androidx.compose.ui.text.coerceIn
  *
  * @see TextFieldBuffer
  */
-@ExperimentalFoundationApi
 sealed interface TextFieldCharSequence : CharSequence {
     /**
      * The selection range. If the selection is collapsed, it represents cursor
      * location. When selection range is out of bounds, it is constrained with the text length.
      */
-    val selectionInChars: TextRange
+    @ExperimentalFoundationApi
+    val selection: TextRange
 
     /**
      * Composition range created by IME. If null, there is no composition range.
@@ -51,7 +51,8 @@ sealed interface TextFieldCharSequence : CharSequence {
      *
      * Composition can only be set by the system.
      */
-    val compositionInChars: TextRange?
+    @ExperimentalFoundationApi
+    val composition: TextRange?
 
     /**
      * Returns true if the text in this object is equal to the text in [other], disregarding any
@@ -64,13 +65,11 @@ sealed interface TextFieldCharSequence : CharSequence {
     abstract override fun hashCode(): Int
 }
 
-@ExperimentalFoundationApi
 fun TextFieldCharSequence(
     text: String = "",
     selection: TextRange = TextRange.Zero
 ): TextFieldCharSequence = TextFieldCharSequenceWrapper(text, selection, composition = null)
 
-@OptIn(ExperimentalFoundationApi::class)
 internal fun TextFieldCharSequence(
     text: CharSequence,
     selection: TextRange,
@@ -81,7 +80,6 @@ internal fun TextFieldCharSequence(
  * Copies the contents of this sequence from [[sourceStartIndex], [sourceEndIndex]) into
  * [destination] starting at [destinationOffset].
  */
-@OptIn(ExperimentalFoundationApi::class)
 internal fun TextFieldCharSequence.toCharArray(
     destination: CharArray,
     destinationOffset: Int,
@@ -104,9 +102,9 @@ private class TextFieldCharSequenceWrapper(
     override val length: Int
         get() = text.length
 
-    override val selectionInChars: TextRange = selection.coerceIn(0, text.length)
+    override val selection: TextRange = selection.coerceIn(0, text.length)
 
-    override val compositionInChars: TextRange? = composition?.coerceIn(0, text.length)
+    override val composition: TextRange? = composition?.coerceIn(0, text.length)
 
     override operator fun get(index: Int): Char = text[index]
 
@@ -137,8 +135,8 @@ private class TextFieldCharSequenceWrapper(
 
         other as TextFieldCharSequenceWrapper
 
-        if (selectionInChars != other.selectionInChars) return false
-        if (compositionInChars != other.compositionInChars) return false
+        if (selection != other.selection) return false
+        if (composition != other.composition) return false
         if (!contentEquals(other.text)) return false
 
         return true
@@ -146,8 +144,8 @@ private class TextFieldCharSequenceWrapper(
 
     override fun hashCode(): Int {
         var result = text.hashCode()
-        result = 31 * result + selectionInChars.hashCode()
-        result = 31 * result + (compositionInChars?.hashCode() ?: 0)
+        result = 31 * result + selection.hashCode()
+        result = 31 * result + (composition?.hashCode() ?: 0)
         return result
     }
 }
@@ -156,29 +154,29 @@ private class TextFieldCharSequenceWrapper(
  * Returns the text before the selection.
  *
  * @param maxChars maximum number of characters (inclusive) before the minimum value in
- * [TextFieldCharSequence.selectionInChars].
+ * [TextFieldCharSequence.selection].
  *
  * @see TextRange.min
  */
 @OptIn(ExperimentalFoundationApi::class)
 internal fun TextFieldCharSequence.getTextBeforeSelection(maxChars: Int): CharSequence =
-    subSequence(kotlin.math.max(0, selectionInChars.min - maxChars), selectionInChars.min)
+    subSequence(kotlin.math.max(0, selection.min - maxChars), selection.min)
 
 /**
  * Returns the text after the selection.
  *
  * @param maxChars maximum number of characters (exclusive) after the maximum value in
- * [TextFieldCharSequence.selectionInChars].
+ * [TextFieldCharSequence.selection].
  *
  * @see TextRange.max
  */
 @OptIn(ExperimentalFoundationApi::class)
 internal fun TextFieldCharSequence.getTextAfterSelection(maxChars: Int): CharSequence =
-    subSequence(selectionInChars.max, kotlin.math.min(selectionInChars.max + maxChars, length))
+    subSequence(selection.max, kotlin.math.min(selection.max + maxChars, length))
 
 /**
  * Returns the currently selected text.
  */
 @OptIn(ExperimentalFoundationApi::class)
 internal fun TextFieldCharSequence.getSelectedText(): CharSequence =
-    subSequence(selectionInChars.min, selectionInChars.max)
+    subSequence(selection.min, selection.max)

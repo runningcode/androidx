@@ -287,12 +287,12 @@ internal class TransformedTextFieldState(
      * @see mapFromTransformed
      */
     inline fun editUntransformedTextAsUser(
-        notifyImeOfChanges: Boolean = true,
+        restartImeIfContentChanges: Boolean = true,
         block: EditingBuffer.() -> Unit
     ) {
         textFieldState.editAsUser(
             inputTransformation = inputTransformation,
-            notifyImeOfChanges = notifyImeOfChanges,
+            restartImeIfContentChanges = restartImeIfContentChanges,
             block = block
         )
     }
@@ -464,11 +464,11 @@ internal class TransformedTextFieldState(
                 // Pass the calculator explicitly since the one on transformedText won't be updated
                 // yet.
                 selection = mapToTransformed(
-                    range = untransformedText.selectionInChars,
+                    range = untransformedText.selection,
                     mapping = offsetMappingCalculator,
                     wedgeAffinity = wedgeAffinity
                 ),
-                composition = untransformedText.compositionInChars?.let {
+                composition = untransformedText.composition?.let {
                     mapToTransformed(
                         range = it,
                         mapping = offsetMappingCalculator,
@@ -510,11 +510,11 @@ internal class TransformedTextFieldState(
                 // Pass the calculator explicitly since the one on transformedText won't be updated
                 // yet.
                 selection = mapToTransformed(
-                    untransformedText.selectionInChars,
+                    untransformedText.selection,
                     offsetMappingCalculator,
                     wedgeAffinity
                 ),
-                composition = untransformedText.compositionInChars?.let {
+                composition = untransformedText.composition?.let {
                     mapToTransformed(it, offsetMappingCalculator, wedgeAffinity)
                 }
             )

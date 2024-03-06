@@ -155,7 +155,7 @@ class AidlGenerator private constructor(
     }
 
     private fun generateTransactionCallbacks(): List<AidlFileSpec> {
-        val annotatedInterfaces = api.services + api.interfaces
+        val annotatedInterfaces = api.services + api.interfaces + api.callbacks
         return annotatedInterfaces
             .flatMap(AnnotatedInterface::methods)
             .filter(Method::isSuspend)
@@ -286,6 +286,7 @@ class AidlGenerator private constructor(
             Short::class.qualifiedName -> primitive("int")
             Unit::class.qualifiedName -> primitive("void")
             List::class.qualifiedName -> getAidlTypeDeclaration(type.typeParameters[0]).listSpec()
+            Types.bundle.qualifiedName -> bundleAidlType
             Types.sdkActivityLauncher.qualifiedName -> bundleAidlType
             else -> throw IllegalArgumentException(
                 "Unsupported type conversion ${type.qualifiedName}"

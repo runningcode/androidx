@@ -41,7 +41,6 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
-import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performKeyInput
@@ -92,7 +91,7 @@ internal class BasicSecureTextFieldTest {
         inputMethodInterceptor.setContent {
             BasicSecureTextField(
                 state = remember {
-                    TextFieldState("Hello", initialSelectionInChars = TextRange(0, 1))
+                    TextFieldState("Hello", initialSelection = TextRange(0, 1))
                 },
                 modifier = Modifier.testTag(Tag)
             )
@@ -388,176 +387,8 @@ internal class BasicSecureTextFieldTest {
     }
 
     @Test
-    fun stringValue_updatesFieldText_whenTextChangedFromCode_whileUnfocused() {
-        var text by mutableStateOf("hello")
-        inputMethodInterceptor.setContent {
-            BasicSecureTextField(
-                value = text,
-                onValueChange = { text = it },
-                modifier = Modifier.testTag(Tag)
-            )
-        }
-
-        rule.runOnIdle {
-            text = "world"
-        }
-        // Auto-advance is disabled.
-        rule.mainClock.advanceTimeByFrame()
-
-        assertThat(
-            rule.onNodeWithTag(Tag).fetchSemanticsNode().config[SemanticsProperties.EditableText]
-                .text
-        ).isEqualTo("world")
-    }
-
-    @Test
-    fun stringValue_doesNotUpdateField_whenTextChangedFromCode_whileFocused() {
-        var text by mutableStateOf("hello")
-        inputMethodInterceptor.setContent {
-            BasicSecureTextField(
-                value = text,
-                onValueChange = { text = it },
-                modifier = Modifier.testTag(Tag)
-            )
-        }
-        requestFocus(Tag)
-
-        rule.runOnIdle {
-            text = "world"
-        }
-
-        rule.onNodeWithTag(Tag).assertTextEquals("hello")
-    }
-
-    @Test
-    fun stringValue_doesNotInvokeCallback_onFocus() {
-        var text by mutableStateOf("")
-        var onValueChangedCount = 0
-        inputMethodInterceptor.setContent {
-            BasicSecureTextField(
-                value = text,
-                onValueChange = {
-                    text = it
-                    onValueChangedCount++
-                },
-                modifier = Modifier.testTag(Tag)
-            )
-        }
-        assertThat(onValueChangedCount).isEqualTo(0)
-
-        requestFocus(Tag)
-
-        rule.runOnIdle {
-            assertThat(onValueChangedCount).isEqualTo(0)
-        }
-    }
-
-    @Test
-    fun stringValue_doesNotInvokeCallback_whenOnlySelectionChanged() {
-        var text by mutableStateOf("")
-        var onValueChangedCount = 0
-        inputMethodInterceptor.setContent {
-            BasicSecureTextField(
-                value = text,
-                onValueChange = {
-                    text = it
-                    onValueChangedCount++
-                },
-                modifier = Modifier.testTag(Tag)
-            )
-        }
-        requestFocus(Tag)
-        assertThat(onValueChangedCount).isEqualTo(0)
-
-        // Act: wiggle the cursor around a bit.
-        rule.onNodeWithTag(Tag).performTextInputSelection(TextRange(0))
-        rule.onNodeWithTag(Tag).performTextInputSelection(TextRange(5))
-
-        rule.runOnIdle {
-            assertThat(onValueChangedCount).isEqualTo(0)
-        }
-    }
-
-    @Test
-    fun stringValue_doesNotInvokeCallback_whenOnlyCompositionChanged() {
-        var text by mutableStateOf("")
-        var onValueChangedCount = 0
-        inputMethodInterceptor.setContent {
-            BasicSecureTextField(
-                value = text,
-                onValueChange = {
-                    text = it
-                    onValueChangedCount++
-                },
-                modifier = Modifier.testTag(Tag)
-            )
-        }
-        requestFocus(Tag)
-        assertThat(onValueChangedCount).isEqualTo(0)
-
-        // Act: wiggle the composition around a bit
-        inputMethodInterceptor.withInputConnection { setComposingRegion(0, 0) }
-        inputMethodInterceptor.withInputConnection { setComposingRegion(3, 5) }
-
-        rule.runOnIdle {
-            assertThat(onValueChangedCount).isEqualTo(0)
-        }
-    }
-
-    @Test
-    fun stringValue_doesNotInvokeCallback_whenTextChangedFromCode_whileUnfocused() {
-        var text by mutableStateOf("")
-        var onValueChangedCount = 0
-        inputMethodInterceptor.setContent {
-            BasicSecureTextField(
-                value = text,
-                onValueChange = {
-                    text = it
-                    onValueChangedCount++
-                },
-                modifier = Modifier.testTag(Tag)
-            )
-        }
-        assertThat(onValueChangedCount).isEqualTo(0)
-
-        rule.runOnIdle {
-            text = "hello"
-        }
-
-        rule.runOnIdle {
-            assertThat(onValueChangedCount).isEqualTo(0)
-        }
-    }
-
-    @Test
-    fun stringValue_doesNotInvokeCallback_whenTextChangedFromCode_whileFocused() {
-        var text by mutableStateOf("")
-        var onValueChangedCount = 0
-        inputMethodInterceptor.setContent {
-            BasicSecureTextField(
-                value = text,
-                onValueChange = {
-                    text = it
-                    onValueChangedCount++
-                },
-                modifier = Modifier.testTag(Tag)
-            )
-        }
-        assertThat(onValueChangedCount).isEqualTo(0)
-        requestFocus(Tag)
-
-        rule.runOnIdle {
-            text = "hello"
-        }
-
-        rule.runOnIdle {
-            assertThat(onValueChangedCount).isEqualTo(0)
-        }
-    }
-
-    @Test
     fun inputMethod_doesNotRestart_inResponseToKeyEvents() {
-        val state = TextFieldState("hello", initialSelectionInChars = TextRange(5))
+        val state = TextFieldState("hello", initialSelection = TextRange(5))
         inputMethodInterceptor.setContent {
             BasicSecureTextField(
                 state = state,

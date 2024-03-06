@@ -23,6 +23,6 @@ interface ISdkApi {
     Bundle loadLocalWebViewAd();
     Bundle loadTestAd(String text);
     Bundle loadTestAdWithWaitInsideOnDraw(String text);
-    Bundle loadMediatedTestAd(int count);
+    Bundle loadMediatedTestAd(int count, boolean isAppMediatee);
     void requestResize(int width, int height);
 }

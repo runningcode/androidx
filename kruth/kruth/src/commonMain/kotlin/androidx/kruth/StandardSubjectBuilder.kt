@@ -18,6 +18,8 @@ package androidx.kruth
 
 import kotlin.jvm.JvmStatic
 
+typealias CharSubject = Subject<Char>
+
 /**
  * In a fluent assertion chain, an object with which you can do any of the following:
  *
@@ -54,21 +56,39 @@ open class StandardSubjectBuilder internal constructor(
         StandardSubjectBuilder(metadata = metadata.withMessage(message = messageToPrepend))
 
     fun <T> that(actual: T?): Subject<T> =
-        Subject(actual = actual, metadata = metadata)
+        Subject(actual = actual, metadata = metadata, null)
+
+    // actual cannot be made nullable due to autoboxing and this overload is necessary to allow
+    // StandardSubjectBuilder.that(char) from Java to resolve properly as an Object
+    // (otherwise it is source-incompatibly interpreted as Int).
+    // See: NumericComparisonTest#testNumericPrimitiveTypes_isNotEqual_shouldFail_charToInt
+    fun that(actual: Char): Subject<Char> =
+        Subject(actual = actual, metadata = metadata, null)
 
     fun <T : Comparable<T>> that(actual: T?): ComparableSubject<T> =
         ComparableSubject(actual = actual, metadata = metadata)
 
     fun <T : Throwable> that(actual: T?): ThrowableSubject<T> =
-        ThrowableSubject(actual = actual, metadata = metadata)
+        ThrowableSubject(actual = actual, metadata = metadata, "throwable")
 
     fun that(actual: Boolean?): BooleanSubject =
         BooleanSubject(actual = actual, metadata = metadata)
 
+    fun that(actual: Long): LongSubject =
+        LongSubject(actual = actual, metadata = metadata)
+
+    // Workaround for https://youtrack.jetbrains.com/issue/KT-645
+    fun <T : Long?> that(actual: T): LongSubject =
+        LongSubject(actual = actual, metadata = metadata)
+
     fun that(actual: Double?): DoubleSubject =
         DoubleSubject(actual = actual, metadata = metadata)
 
-    fun that(actual: Int?): IntegerSubject =
+    fun that(actual: Int): IntegerSubject =
+        IntegerSubject(actual = actual, metadata = metadata)
+
+    // Workaround for https://youtrack.jetbrains.com/issue/KT-645
+    fun <T : Int?> that(actual: T): IntegerSubject =
         IntegerSubject(actual = actual, metadata = metadata)
 
     fun that(actual: String?): StringSubject =

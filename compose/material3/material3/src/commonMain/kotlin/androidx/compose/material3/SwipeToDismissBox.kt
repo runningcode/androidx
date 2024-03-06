@@ -78,7 +78,7 @@ class SwipeToDismissBoxState(
         animationSpec = AnchoredDraggableDefaults.AnimationSpec,
         confirmValueChange = confirmValueChange,
         positionalThreshold = positionalThreshold,
-        velocityThreshold = { with(density) { DismissThreshold.toPx() } }
+        velocityThreshold = { with(density) { DismissVelocityThreshold.toPx() } }
     )
 
     internal val offset: Float get() = anchoredDraggableState.offset
@@ -111,14 +111,15 @@ class SwipeToDismissBoxState(
     /**
      * The direction (if any) in which the composable has been or is being dismissed.
      *
-     * Use this to change the background of the [SwipeToDismissBox] if you want different actions on each
-     * side.
+     * Use this to change the background of the [SwipeToDismissBox] if you want different actions
+     * on each side.
      */
     val dismissDirection: SwipeToDismissBoxValue
-        get() = if (offset == 0f || offset.isNaN())
-            SwipeToDismissBoxValue.Settled
-        else if (offset > 0f)
-            SwipeToDismissBoxValue.StartToEnd else SwipeToDismissBoxValue.EndToStart
+        get() = when {
+            offset == 0f || offset.isNaN() -> SwipeToDismissBoxValue.Settled
+            offset > 0f -> SwipeToDismissBoxValue.StartToEnd
+            else -> SwipeToDismissBoxValue.EndToStart
+        }
 
     /**
      * Whether the component has been dismissed in the given [direction].
@@ -266,8 +267,8 @@ fun SwipeToDismiss(
  * @sample androidx.compose.material3.samples.SwipeToDismissListItems
  *
  * @param state The state of this component.
- * @param backgroundContent A composable that is stacked behind the [content] and is exposed when the
- * content is swiped. You can/should use the [state] to have different backgrounds on each side.
+ * @param backgroundContent A composable that is stacked behind the [content] and is exposed when
+ * the content is swiped. You can/should use the [state] to have different backgrounds on each side.
  * @param modifier Optional [Modifier] for this component.
  * @param enableDismissFromStartToEnd Whether SwipeToDismissBox can be dismissed from start to end.
  * @param enableDismissFromEndToStart Whether SwipeToDismissBox can be dismissed from end to start.
@@ -291,7 +292,6 @@ fun SwipeToDismissBox(
                 state = state.anchoredDraggableState,
                 orientation = Orientation.Horizontal,
                 enabled = state.currentValue == SwipeToDismissBoxValue.Settled,
-                reverseDirection = isRtl,
             ),
         propagateMinConstraints = true
     ) {
@@ -309,10 +309,10 @@ fun SwipeToDismissBox(
                 return@draggableAnchors DraggableAnchors {
                     SwipeToDismissBoxValue.Settled at 0f
                     if (enableDismissFromStartToEnd) {
-                        SwipeToDismissBoxValue.StartToEnd at width
+                        SwipeToDismissBoxValue.StartToEnd at (if (isRtl) -width else width)
                     }
                     if (enableDismissFromEndToStart) {
-                        SwipeToDismissBoxValue.EndToStart at -width
+                        SwipeToDismissBoxValue.EndToStart at (if (isRtl) width else -width)
                     }
                 } to state.targetValue
             }
@@ -377,4 +377,4 @@ enum class DismissValue {
     DismissedToStart
 }
 
-private val DismissThreshold = 125.dp
+private val DismissVelocityThreshold = 125.dp

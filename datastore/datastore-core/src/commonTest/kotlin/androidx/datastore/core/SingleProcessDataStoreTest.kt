@@ -1096,6 +1096,52 @@ abstract class SingleProcessDataStoreTest<F : TestFile<F>>(private val testIO: T
         assertThat(store2.data.first()).isEqualTo(2.toByte())
     }
 
+    @Test
+    fun testReadHandlesCorruptionAfterInit() {
+        runTest {
+            val corruptionHandler = TestingCorruptionHandler(replaceWith = 3.toByte())
+            val newStore = newDataStore(
+                testFile,
+                corruptionHandler = corruptionHandler
+            )
+
+            // create the file to prevent serializer from returning default value
+            newStore.updateData { 1 }
+            assertThat(newStore.data.first()).isEqualTo(1)
+
+            // increment version to force non-cached read which gets automatically reset from a
+            // [CorruptionException], the current state is [Data]
+            serializerConfig.failReadWithCorruptionException = true
+            serializerConfig.defaultValue = 2
+            newStore.incrementSharedCounter()
+            assertThat(newStore.data.first()).isEqualTo(3.toByte())
+            assertThat(corruptionHandler.numCalls.get()).isEqualTo(1)
+        }
+    }
+
+    @Test
+    fun testUpdateHandlesCorruptionAfterInit() {
+        runTest {
+            val corruptionHandler = TestingCorruptionHandler(replaceWith = 3.toByte())
+            val newStore = newDataStore(
+                testFile,
+                corruptionHandler = corruptionHandler
+            )
+
+            // create the file to prevent serializer from returning default value
+            newStore.updateData { 1 }
+            assertThat(newStore.data.first()).isEqualTo(1)
+
+            // increment version to force non-cached read which gets [CorruptionException], the
+            // current state is [Data]
+            serializerConfig.failReadWithCorruptionException = true
+            serializerConfig.defaultValue = 2
+            newStore.incrementSharedCounter()
+            assertThat(newStore.updateData { it.inc() }).isEqualTo(4)
+            assertThat(corruptionHandler.numCalls.get()).isEqualTo(1)
+        }
+    }
+
     private class TestingCorruptionHandler(
         private val replaceWith: Byte? = null
     ) : CorruptionHandler<Byte> {

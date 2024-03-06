@@ -42,7 +42,6 @@ import androidx.camera.extensions.impl.advanced.BokehAdvancedExtenderImpl;
 import androidx.camera.extensions.impl.advanced.HdrAdvancedExtenderImpl;
 import androidx.camera.extensions.impl.advanced.NightAdvancedExtenderImpl;
 import androidx.camera.extensions.internal.compat.workaround.ExtensionDisabledValidator;
-import androidx.camera.extensions.internal.compat.workaround.ImageAnalysisAvailability;
 import androidx.camera.extensions.internal.sessionprocessor.AdvancedSessionProcessor;
 import androidx.core.util.Preconditions;
 
@@ -164,13 +163,8 @@ public class AdvancedVendorExtender implements VendorExtender {
     @Override
     public Size[] getSupportedYuvAnalysisResolutions() {
         Preconditions.checkNotNull(mCameraId, "VendorExtender#init() must be called first");
-        ImageAnalysisAvailability imageAnalysisAvailability = new ImageAnalysisAvailability();
-        if (!imageAnalysisAvailability.isAvailable(mCameraId, mMode)) {
-            return new Size[0];
-        }
-
-        List<Size> yuvList = mAdvancedExtenderImpl.getSupportedYuvAnalysisResolutions(mCameraId);
-        return yuvList == null ? new Size[0] : yuvList.toArray(new Size[0]);
+        // Disable ImageAnalysis
+        return new Size[0];
     }
 
     @NonNull
@@ -248,7 +242,7 @@ public class AdvancedVendorExtender implements VendorExtender {
     }
 
     @Override
-    public boolean isCurrentExtensionTypeAvailable() {
+    public boolean isCurrentExtensionModeAvailable() {
         // EXTENSION_CURRENT_TYPE is supported since API level 34
         if (ClientVersion.isMinimumCompatibleVersion(Version.VERSION_1_4)
                 && ExtensionVersion.isMinimumCompatibleVersion(Version.VERSION_1_4)

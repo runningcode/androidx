@@ -623,15 +623,11 @@ package androidx.compose.material3 {
   }
 
   @Deprecated @SuppressCompatibility @androidx.compose.material3.ExperimentalMaterial3Api public enum DismissDirection {
-    method @Deprecated public static androidx.compose.material3.DismissDirection valueOf(String value) throws java.lang.IllegalArgumentException, java.lang.NullPointerException;
-    method @Deprecated public static androidx.compose.material3.DismissDirection[] values();
     enum_constant @Deprecated public static final androidx.compose.material3.DismissDirection EndToStart;
     enum_constant @Deprecated public static final androidx.compose.material3.DismissDirection StartToEnd;
   }
 
   @Deprecated @SuppressCompatibility @androidx.compose.material3.ExperimentalMaterial3Api public enum DismissValue {
-    method @Deprecated public static androidx.compose.material3.DismissValue valueOf(String value) throws java.lang.IllegalArgumentException, java.lang.NullPointerException;
-    method @Deprecated public static androidx.compose.material3.DismissValue[] values();
     enum_constant @Deprecated public static final androidx.compose.material3.DismissValue Default;
     enum_constant @Deprecated public static final androidx.compose.material3.DismissValue DismissedToEnd;
     enum_constant @Deprecated public static final androidx.compose.material3.DismissValue DismissedToStart;
@@ -663,21 +659,25 @@ package androidx.compose.material3 {
   }
 
   public final class DrawerDefaults {
-    method @androidx.compose.runtime.Composable public long getContainerColor();
+    method @Deprecated @androidx.compose.runtime.Composable public long getContainerColor();
     method public float getDismissibleDrawerElevation();
     method public float getMaximumDrawerWidth();
+    method @androidx.compose.runtime.Composable public long getModalContainerColor();
     method public float getModalDrawerElevation();
     method public float getPermanentDrawerElevation();
     method @androidx.compose.runtime.Composable public long getScrimColor();
     method @androidx.compose.runtime.Composable public androidx.compose.ui.graphics.Shape getShape();
+    method @androidx.compose.runtime.Composable public long getStandardContainerColor();
     method @androidx.compose.runtime.Composable public androidx.compose.foundation.layout.WindowInsets getWindowInsets();
     property public final float DismissibleDrawerElevation;
     property public final float MaximumDrawerWidth;
     property public final float ModalDrawerElevation;
     property public final float PermanentDrawerElevation;
-    property @androidx.compose.runtime.Composable public final long containerColor;
+    property @Deprecated @androidx.compose.runtime.Composable public final long containerColor;
+    property @androidx.compose.runtime.Composable public final long modalContainerColor;
     property @androidx.compose.runtime.Composable public final long scrimColor;
     property @androidx.compose.runtime.Composable public final androidx.compose.ui.graphics.Shape shape;
+    property @androidx.compose.runtime.Composable public final long standardContainerColor;
     property @androidx.compose.runtime.Composable public final androidx.compose.foundation.layout.WindowInsets windowInsets;
     field public static final androidx.compose.material3.DrawerDefaults INSTANCE;
   }
@@ -710,8 +710,6 @@ package androidx.compose.material3 {
   }
 
   public enum DrawerValue {
-    method public static androidx.compose.material3.DrawerValue valueOf(String value) throws java.lang.IllegalArgumentException, java.lang.NullPointerException;
-    method public static androidx.compose.material3.DrawerValue[] values();
     enum_constant public static final androidx.compose.material3.DrawerValue Closed;
     enum_constant public static final androidx.compose.material3.DrawerValue Open;
   }
@@ -726,13 +724,15 @@ package androidx.compose.material3 {
 
   @SuppressCompatibility @androidx.compose.material3.ExperimentalMaterial3Api public abstract class ExposedDropdownMenuBoxScope {
     ctor public ExposedDropdownMenuBoxScope();
-    method @androidx.compose.runtime.Composable public final void ExposedDropdownMenu(boolean expanded, kotlin.jvm.functions.Function0<kotlin.Unit> onDismissRequest, optional androidx.compose.ui.Modifier modifier, optional androidx.compose.foundation.ScrollState scrollState, kotlin.jvm.functions.Function1<? super androidx.compose.foundation.layout.ColumnScope,kotlin.Unit> content);
+    method @androidx.compose.runtime.Composable public final void ExposedDropdownMenu(boolean expanded, kotlin.jvm.functions.Function0<kotlin.Unit> onDismissRequest, optional androidx.compose.ui.Modifier modifier, optional androidx.compose.foundation.ScrollState scrollState, optional boolean focusable, optional boolean matchTextFieldWidth, optional androidx.compose.ui.graphics.Shape shape, optional long containerColor, optional float tonalElevation, optional float shadowElevation, optional androidx.compose.foundation.BorderStroke? border, kotlin.jvm.functions.Function1<? super androidx.compose.foundation.layout.ColumnScope,kotlin.Unit> content);
+    method @Deprecated @androidx.compose.runtime.Composable public void ExposedDropdownMenu(boolean expanded, kotlin.jvm.functions.Function0<kotlin.Unit> onDismissRequest, optional androidx.compose.ui.Modifier modifier, optional androidx.compose.foundation.ScrollState scrollState, kotlin.jvm.functions.Function1<? super androidx.compose.foundation.layout.ColumnScope,kotlin.Unit> content);
     method public abstract androidx.compose.ui.Modifier exposedDropdownSize(androidx.compose.ui.Modifier, optional boolean matchTextFieldWidth);
     method public abstract androidx.compose.ui.Modifier menuAnchor(androidx.compose.ui.Modifier);
   }
 
   @SuppressCompatibility @androidx.compose.material3.ExperimentalMaterial3Api public final class ExposedDropdownMenuDefaults {
-    method @SuppressCompatibility @androidx.compose.material3.ExperimentalMaterial3Api @androidx.compose.runtime.Composable public void TrailingIcon(boolean expanded);
+    method @Deprecated @SuppressCompatibility @androidx.compose.material3.ExperimentalMaterial3Api @androidx.compose.runtime.Composable public void TrailingIcon(boolean expanded);
+    method @SuppressCompatibility @androidx.compose.material3.ExperimentalMaterial3Api @androidx.compose.runtime.Composable public void TrailingIcon(boolean expanded, optional androidx.compose.ui.Modifier modifier);
     method public androidx.compose.foundation.layout.PaddingValues getItemContentPadding();
     method @Deprecated @androidx.compose.runtime.Composable public androidx.compose.material3.TextFieldColors outlinedTextFieldColors(optional long textColor, optional long disabledTextColor, optional long containerColor, optional long cursorColor, optional long errorCursorColor, optional androidx.compose.foundation.text.selection.TextSelectionColors selectionColors, optional long focusedBorderColor, optional long unfocusedBorderColor, optional long disabledBorderColor, optional long errorBorderColor, optional long focusedLeadingIconColor, optional long unfocusedLeadingIconColor, optional long disabledLeadingIconColor, optional long errorLeadingIconColor, optional long focusedTrailingIconColor, optional long unfocusedTrailingIconColor, optional long disabledTrailingIconColor, optional long errorTrailingIconColor, optional long focusedLabelColor, optional long unfocusedLabelColor, optional long disabledLabelColor, optional long errorLabelColor, optional long placeholderColor, optional long disabledPlaceholderColor);
     method @Deprecated @androidx.compose.runtime.Composable public androidx.compose.material3.TextFieldColors outlinedTextFieldColors(optional long focusedTextColor, optional long unfocusedTextColor, optional long disabledTextColor, optional long errorTextColor, optional long containerColor, optional long errorContainerColor, optional long cursorColor, optional long errorCursorColor, optional androidx.compose.foundation.text.selection.TextSelectionColors selectionColors, optional long focusedBorderColor, optional long unfocusedBorderColor, optional long disabledBorderColor, optional long errorBorderColor, optional long focusedLeadingIconColor, optional long unfocusedLeadingIconColor, optional long disabledLeadingIconColor, optional long errorLeadingIconColor, optional long focusedTrailingIconColor, optional long unfocusedTrailingIconColor, optional long disabledTrailingIconColor, optional long errorTrailingIconColor, optional long focusedLabelColor, optional long unfocusedLabelColor, optional long disabledLabelColor, optional long errorLabelColor, optional long focusedPlaceholderColor, optional long unfocusedPlaceholderColor, optional long disabledPlaceholderColor, optional long errorPlaceholderColor, optional long focusedPrefixColor, optional long unfocusedPrefixColor, optional long disabledPrefixColor, optional long errorPrefixColor, optional long focusedSuffixColor, optional long unfocusedSuffixColor, optional long disabledSuffixColor, optional long errorSuffixColor);
@@ -1022,7 +1022,7 @@ package androidx.compose.material3 {
     field public static final androidx.compose.material3.NavigationBarDefaults INSTANCE;
   }
 
-  @androidx.compose.runtime.Stable public final class NavigationBarItemColors {
+  @androidx.compose.runtime.Immutable public final class NavigationBarItemColors {
     ctor public NavigationBarItemColors(long selectedIconColor, long selectedTextColor, long selectedIndicatorColor, long unselectedIconColor, long unselectedTextColor, long disabledIconColor, long disabledTextColor);
     method public androidx.compose.material3.NavigationBarItemColors copy(optional long selectedIconColor, optional long selectedTextColor, optional long selectedIndicatorColor, optional long unselectedIconColor, optional long unselectedTextColor, optional long disabledIconColor, optional long disabledTextColor);
     method public long getDisabledIconColor();
@@ -1086,7 +1086,7 @@ package androidx.compose.material3 {
     field public static final androidx.compose.material3.NavigationRailDefaults INSTANCE;
   }
 
-  @androidx.compose.runtime.Stable public final class NavigationRailItemColors {
+  @androidx.compose.runtime.Immutable public final class NavigationRailItemColors {
     ctor public NavigationRailItemColors(long selectedIconColor, long selectedTextColor, long selectedIndicatorColor, long unselectedIconColor, long unselectedTextColor, long disabledIconColor, long disabledTextColor);
     method public androidx.compose.material3.NavigationRailItemColors copy(optional long selectedIconColor, optional long selectedTextColor, optional long selectedIndicatorColor, optional long unselectedIconColor, optional long unselectedTextColor, optional long disabledIconColor, optional long disabledTextColor);
     method public long getDisabledIconColor();
@@ -1427,8 +1427,7 @@ package androidx.compose.material3 {
   }
 
   @SuppressCompatibility @androidx.compose.material3.ExperimentalMaterial3Api @androidx.compose.runtime.Stable public final class SheetState {
-    ctor @Deprecated public SheetState(boolean skipPartiallyExpanded, optional androidx.compose.material3.SheetValue initialValue, optional kotlin.jvm.functions.Function1<? super androidx.compose.material3.SheetValue,java.lang.Boolean> confirmValueChange, optional boolean skipHiddenState);
-    ctor @SuppressCompatibility @androidx.compose.material3.ExperimentalMaterial3Api public SheetState(boolean skipPartiallyExpanded, androidx.compose.ui.unit.Density density, optional androidx.compose.material3.SheetValue initialValue, optional kotlin.jvm.functions.Function1<? super androidx.compose.material3.SheetValue,java.lang.Boolean> confirmValueChange, optional boolean skipHiddenState);
+    ctor public SheetState(boolean skipPartiallyExpanded, androidx.compose.ui.unit.Density density, optional androidx.compose.material3.SheetValue initialValue, optional kotlin.jvm.functions.Function1<? super androidx.compose.material3.SheetValue,java.lang.Boolean> confirmValueChange, optional boolean skipHiddenState);
     method public suspend Object? expand(kotlin.coroutines.Continuation<? super kotlin.Unit>);
     method public androidx.compose.material3.SheetValue getCurrentValue();
     method public boolean getHasExpandedState();
@@ -1448,13 +1447,10 @@ package androidx.compose.material3 {
   }
 
   public static final class SheetState.Companion {
-    method @Deprecated public androidx.compose.runtime.saveable.Saver<androidx.compose.material3.SheetState,androidx.compose.material3.SheetValue> Saver(boolean skipPartiallyExpanded, kotlin.jvm.functions.Function1<? super androidx.compose.material3.SheetValue,java.lang.Boolean> confirmValueChange);
-    method public androidx.compose.runtime.saveable.Saver<androidx.compose.material3.SheetState,androidx.compose.material3.SheetValue> Saver(boolean skipPartiallyExpanded, kotlin.jvm.functions.Function1<? super androidx.compose.material3.SheetValue,java.lang.Boolean> confirmValueChange, androidx.compose.ui.unit.Density density);
+    method public androidx.compose.runtime.saveable.Saver<androidx.compose.material3.SheetState,androidx.compose.material3.SheetValue> Saver(boolean skipPartiallyExpanded, kotlin.jvm.functions.Function1<? super androidx.compose.material3.SheetValue,java.lang.Boolean> confirmValueChange, androidx.compose.ui.unit.Density density, boolean skipHiddenState);
   }
 
   @SuppressCompatibility @androidx.compose.material3.ExperimentalMaterial3Api public enum SheetValue {
-    method public static androidx.compose.material3.SheetValue valueOf(String value) throws java.lang.IllegalArgumentException, java.lang.NullPointerException;
-    method public static androidx.compose.material3.SheetValue[] values();
     enum_constant public static final androidx.compose.material3.SheetValue Expanded;
     enum_constant public static final androidx.compose.material3.SheetValue Hidden;
     enum_constant public static final androidx.compose.material3.SheetValue PartiallyExpanded;
@@ -1491,10 +1487,10 @@ package androidx.compose.material3 {
   @androidx.compose.runtime.Stable public final class SliderDefaults {
     method @androidx.compose.runtime.Composable public void Thumb(androidx.compose.foundation.interaction.MutableInteractionSource interactionSource, optional androidx.compose.ui.Modifier modifier, optional androidx.compose.material3.SliderColors colors, optional boolean enabled, optional long thumbSize);
     method @Deprecated @androidx.compose.runtime.Composable public void Track(androidx.compose.material3.RangeSliderState rangeSliderState, optional androidx.compose.ui.Modifier modifier, optional androidx.compose.material3.SliderColors colors, optional boolean enabled);
-    method @androidx.compose.runtime.Composable public void Track(androidx.compose.material3.RangeSliderState rangeSliderState, optional androidx.compose.ui.Modifier modifier, optional androidx.compose.material3.SliderColors colors, optional boolean enabled, optional float thumbTrackGapSize, optional float trackInsideCornerSize, optional kotlin.jvm.functions.Function2<? super androidx.compose.ui.graphics.drawscope.DrawScope,? super androidx.compose.ui.geometry.Offset,kotlin.Unit>? drawStopIndicator);
+    method @androidx.compose.runtime.Composable public void Track(androidx.compose.material3.RangeSliderState rangeSliderState, optional androidx.compose.ui.Modifier modifier, optional boolean enabled, optional androidx.compose.material3.SliderColors colors, optional kotlin.jvm.functions.Function2<? super androidx.compose.ui.graphics.drawscope.DrawScope,? super androidx.compose.ui.geometry.Offset,kotlin.Unit>? drawStopIndicator, optional float thumbTrackGapSize, optional float trackInsideCornerSize);
     method @Deprecated @androidx.compose.runtime.Composable public void Track(androidx.compose.material3.SliderPositions sliderPositions, optional androidx.compose.ui.Modifier modifier, optional androidx.compose.material3.SliderColors colors, optional boolean enabled);
     method @Deprecated @SuppressCompatibility @androidx.compose.material3.ExperimentalMaterial3Api @androidx.compose.runtime.Composable public void Track(androidx.compose.material3.SliderState sliderState, optional androidx.compose.ui.Modifier modifier, optional androidx.compose.material3.SliderColors colors, optional boolean enabled);
-    method @SuppressCompatibility @androidx.compose.material3.ExperimentalMaterial3Api @androidx.compose.runtime.Composable public void Track(androidx.compose.material3.SliderState sliderState, optional androidx.compose.ui.Modifier modifier, optional androidx.compose.material3.SliderColors colors, optional boolean enabled, optional float thumbTrackGapSize, optional float trackInsideCornerSize, optional kotlin.jvm.functions.Function2<? super androidx.compose.ui.graphics.drawscope.DrawScope,? super androidx.compose.ui.geometry.Offset,kotlin.Unit>? drawStopIndicator);
+    method @SuppressCompatibility @androidx.compose.material3.ExperimentalMaterial3Api @androidx.compose.runtime.Composable public void Track(androidx.compose.material3.SliderState sliderState, optional androidx.compose.ui.Modifier modifier, optional boolean enabled, optional androidx.compose.material3.SliderColors colors, optional kotlin.jvm.functions.Function2<? super androidx.compose.ui.graphics.drawscope.DrawScope,? super androidx.compose.ui.geometry.Offset,kotlin.Unit>? drawStopIndicator, optional float thumbTrackGapSize, optional float trackInsideCornerSize);
     method @androidx.compose.runtime.Composable public androidx.compose.material3.SliderColors colors();
     method @androidx.compose.runtime.Composable public androidx.compose.material3.SliderColors colors(optional long thumbColor, optional long activeTrackColor, optional long activeTickColor, optional long inactiveTrackColor, optional long inactiveTickColor, optional long disabledThumbColor, optional long disabledActiveTrackColor, optional long disabledActiveTickColor, optional long disabledInactiveTrackColor, optional long disabledInactiveTickColor);
     field public static final androidx.compose.material3.SliderDefaults INSTANCE;
@@ -1556,8 +1552,6 @@ package androidx.compose.material3 {
   }
 
   public enum SnackbarDuration {
-    method public static androidx.compose.material3.SnackbarDuration valueOf(String value) throws java.lang.IllegalArgumentException, java.lang.NullPointerException;
-    method public static androidx.compose.material3.SnackbarDuration[] values();
     enum_constant public static final androidx.compose.material3.SnackbarDuration Indefinite;
     enum_constant public static final androidx.compose.material3.SnackbarDuration Long;
     enum_constant public static final androidx.compose.material3.SnackbarDuration Short;
@@ -1581,8 +1575,6 @@ package androidx.compose.material3 {
   }
 
   public enum SnackbarResult {
-    method public static androidx.compose.material3.SnackbarResult valueOf(String value) throws java.lang.IllegalArgumentException, java.lang.NullPointerException;
-    method public static androidx.compose.material3.SnackbarResult[] values();
     enum_constant public static final androidx.compose.material3.SnackbarResult ActionPerformed;
     enum_constant public static final androidx.compose.material3.SnackbarResult Dismissed;
   }
@@ -1660,8 +1652,6 @@ package androidx.compose.material3 {
   }
 
   @SuppressCompatibility @androidx.compose.material3.ExperimentalMaterial3Api public enum SwipeToDismissBoxValue {
-    method public static androidx.compose.material3.SwipeToDismissBoxValue valueOf(String value) throws java.lang.IllegalArgumentException, java.lang.NullPointerException;
-    method public static androidx.compose.material3.SwipeToDismissBoxValue[] values();
     enum_constant public static final androidx.compose.material3.SwipeToDismissBoxValue EndToStart;
     enum_constant public static final androidx.compose.material3.SwipeToDismissBoxValue Settled;
     enum_constant public static final androidx.compose.material3.SwipeToDismissBoxValue StartToEnd;

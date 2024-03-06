@@ -30,8 +30,6 @@ buildscript {
         classpath("com.google.protobuf:protobuf-java:3.22.3")
         // upgrade okio for gcpbuildcache that is compatible with the wire plugin used by androidx
         classpath("com.squareup.okio:okio:3.3.0")
-        classpath("com.gradle:gradle-enterprise-gradle-plugin:3.16")
-        classpath("com.gradle:common-custom-user-data-gradle-plugin:1.12")
         classpath("androidx.build.gradle.gcpbuildcache:gcpbuildcache:1.0.0-beta07")
     }
 }
@@ -174,6 +172,7 @@ enum BuildType {
     CAMERA,
     NATIVE,
     WINDOW,
+    XR,
 }
 
 private String getRequestedProjectSubsetName() {
@@ -242,6 +241,9 @@ private Set<BuildType> createRequestedFilter() {
             case "WINDOW":
                 filter.add(BuildType.WINDOW)
                 break
+            case "XR":
+                filter.add(BuildType.XR)
+                break
             case "ALL":
                 // Return null so that no filtering is done
                 return null
@@ -258,7 +260,8 @@ private Set<BuildType> createRequestedFilter() {
                         "WEAR    - Wear OS projects\n" +
                         "NATIVE  - native projects\n" +
                         "WINDOW  - window projects\n" +
-                        "GLANCE  - glance projects")
+                        "GLANCE  - glance projects\n" +
+                        "XR      - XR projects")
         }
     }
     return filter
@@ -319,6 +322,13 @@ def includeProject(String name, filePath, List<BuildType> filter = []) {
         file = new File(rootDir, name.substring(1).replace(":", "/"))
     }
     projectDependencyGraph.addToAllProjects(name, file)
+}
+
+def includeOptionalProject(String name, File filePath, List<BuildType> filter = []) {
+    if (providers.gradleProperty("androidx.includeOptionalProjects")
+            .getOrElse("false").toBoolean()) {
+        includeProject(name, filePath, filter)
+    }
 }
 
 /////////////////////////////
@@ -531,6 +541,8 @@ includeProject(":compose:material:material-icons-extended", [BuildType.COMPOSE])
 includeProject(":compose:material:material-ripple", [BuildType.COMPOSE])
 includeProject(":compose:material:material-ripple:material-ripple-benchmark", "compose/material/material-ripple/benchmark", [BuildType.COMPOSE])
 includeProject(":compose:material:material:icons:generator", [BuildType.COMPOSE])
+includeProject(":compose:material:material-navigation", [BuildType.COMPOSE])
+includeProject(":compose:material:material-navigation-samples", "compose/material/material-navigation/samples", [BuildType.COMPOSE])
 includeProject(":compose:material:material:integration-tests:material-demos", [BuildType.COMPOSE])
 includeProject(":compose:material:material:integration-tests:material-catalog", [BuildType.COMPOSE])
 includeProject(":compose:material3:material3:integration-tests:material3-demos", [BuildType.COMPOSE])
@@ -841,6 +853,7 @@ includeProject(":privacysandbox:sdkruntime:test-sdks:current", [BuildType.MAIN])
 includeProject(":privacysandbox:sdkruntime:test-sdks:v1", [BuildType.MAIN])
 includeProject(":privacysandbox:sdkruntime:test-sdks:v2", [BuildType.MAIN])
 includeProject(":privacysandbox:sdkruntime:test-sdks:v4", [BuildType.MAIN])
+includeProject(":privacysandbox:sdkruntime:test-sdks:v5", [BuildType.MAIN])
 includeProject(":privacysandbox:tools:tools", [BuildType.MAIN])
 includeProject(":privacysandbox:tools:tools-apicompiler", [BuildType.MAIN])
 includeProject(":privacysandbox:tools:tools-apigenerator", [BuildType.MAIN])
@@ -1065,6 +1078,16 @@ includeProject(":work:work-runtime-lint", "work/work-lint", [BuildType.MAIN])
 includeProject(":work:work-rxjava2", [BuildType.MAIN])
 includeProject(":work:work-rxjava3", [BuildType.MAIN])
 includeProject(":work:work-testing", [BuildType.MAIN])
+
+/////////////////////////////
+//
+// Optional projects
+//
+/////////////////////////////
+
+File repoRoot = new File(rootDir, "../..").canonicalFile
+
+includeOptionalProject(":xr:xr", new File(repoRoot, "xr/xr"), [BuildType.XR])
 
 /////////////////////////////
 //

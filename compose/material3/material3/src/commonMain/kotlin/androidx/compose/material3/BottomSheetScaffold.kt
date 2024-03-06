@@ -28,7 +28,6 @@ import androidx.compose.material3.SheetValue.Expanded
 import androidx.compose.material3.SheetValue.Hidden
 import androidx.compose.material3.SheetValue.PartiallyExpanded
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -44,6 +43,7 @@ import androidx.compose.ui.semantics.dismiss
 import androidx.compose.ui.semantics.expand
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMaxOfOrNull
@@ -79,7 +79,9 @@ import kotlinx.coroutines.launch
  * @param sheetContentColor the preferred content color provided by the bottom sheet to its
  * children. Defaults to the matching content color for [sheetContainerColor], or if that is
  * not a color from the theme, this will keep the same content color set above the bottom sheet.
- * @param sheetTonalElevation the tonal elevation of the bottom sheet
+ * @param sheetTonalElevation when [sheetContainerColor] is [ColorScheme.surface], a translucent
+ * primary color overlay is applied on top of the container. A higher tonal elevation value will
+ * result in a darker color in light theme and lighter color in dark theme. See also: [Surface].
  * @param sheetShadowElevation the shadow elevation of the bottom sheet
  * @param sheetDragHandle optional visual marker to pull the scaffold's bottom sheet
  * @param sheetSwipeEnabled whether the sheet swiping is enabled and should react to the user's
@@ -108,7 +110,7 @@ fun BottomSheetScaffold(
     sheetShape: Shape = BottomSheetDefaults.ExpandedShape,
     sheetContainerColor: Color = BottomSheetDefaults.ContainerColor,
     sheetContentColor: Color = contentColorFor(sheetContainerColor),
-    sheetTonalElevation: Dp = BottomSheetDefaults.Elevation,
+    sheetTonalElevation: Dp = 0.dp,
     sheetShadowElevation: Dp = BottomSheetDefaults.Elevation,
     sheetDragHandle: @Composable (() -> Unit)? = { BottomSheetDefaults.DragHandle() },
     sheetSwipeEnabled: Boolean = true,
@@ -195,7 +197,11 @@ fun rememberStandardBottomSheetState(
     initialValue: SheetValue = PartiallyExpanded,
     confirmValueChange: (SheetValue) -> Boolean = { true },
     skipHiddenState: Boolean = true,
-) = rememberSheetState(false, confirmValueChange, initialValue, skipHiddenState)
+) = rememberSheetState(
+    confirmValueChange = confirmValueChange,
+    initialValue = initialValue,
+    skipHiddenState = skipHiddenState,
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -332,11 +338,6 @@ private fun BottomSheetScaffoldLayout(
     containerColor: Color,
     contentColor: Color,
 ) {
-    // b/291735717 Remove this once deprecated methods without density are removed
-    val density = LocalDensity.current
-    SideEffect {
-        sheetState.density = density
-    }
     Layout(
         contents = listOf<@Composable () -> Unit>(
             topBar ?: { },

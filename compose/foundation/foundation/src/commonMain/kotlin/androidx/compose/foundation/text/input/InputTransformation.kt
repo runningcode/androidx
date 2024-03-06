@@ -19,6 +19,8 @@ package androidx.compose.foundation.text.input
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Stable
+import androidx.compose.ui.semantics.SemanticsPropertyReceiver
+import androidx.compose.ui.semantics.maxTextLength
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.substring
@@ -34,13 +36,11 @@ import androidx.compose.ui.text.toUpperCase
  * To chain filters together, call [then].
  *
  * Prebuilt filters are provided for common filter operations. See:
- *  - [InputTransformation].[maxLengthInChars]`()`
- *  - [InputTransformation].[maxLengthInCodepoints]`()`
+ *  - [InputTransformation].[maxLength]`()`
  *  - [InputTransformation].[allCaps]`()`
  *
  * @sample androidx.compose.foundation.samples.BasicTextFieldCustomInputTransformationSample
  */
-@ExperimentalFoundationApi
 @Stable
 fun interface InputTransformation {
 
@@ -48,7 +48,15 @@ fun interface InputTransformation {
      * Optional [KeyboardOptions] that will be used as the default keyboard options for configuring
      * the IME. The options passed directly to the text field composable will always override this.
      */
+    @ExperimentalFoundationApi
     val keyboardOptions: KeyboardOptions? get() = null
+
+    /**
+     * Optional semantics configuration that can update certain characteristics of the applied
+     * TextField, e.g. [SemanticsPropertyReceiver.maxTextLength].
+     */
+    @ExperimentalFoundationApi
+    fun SemanticsPropertyReceiver.applySemantics() = Unit
 
     /**
      * The transform operation. For more information see the documentation on [InputTransformation].
@@ -87,7 +95,7 @@ fun interface InputTransformation {
  */
 @ExperimentalFoundationApi
 @Stable
-@kotlin.jvm.JvmName("thenOrNull")
+@JvmName("thenOrNull")
 fun InputTransformation?.then(next: InputTransformation?): InputTransformation? = when {
     this == null -> next
     next == null -> this
@@ -144,26 +152,13 @@ fun InputTransformation.allCaps(locale: Locale): InputTransformation =
     this.then(AllCapsTransformation(locale))
 
 /**
- * Returns [InputTransformation] that rejects input which causes the total length of the text field to be
- * more than [maxLength] characters.
- *
- * @see maxLengthInCodepoints
+ * Returns [InputTransformation] that rejects input which causes the total length of the text field
+ * to be more than [maxLength] characters.
  */
 @ExperimentalFoundationApi
 @Stable
-fun InputTransformation.maxLengthInChars(maxLength: Int): InputTransformation =
-    this.then(MaxLengthFilter(maxLength, inCodepoints = false))
-
-/**
- * Returns a [InputTransformation] that rejects input which causes the total length of the text field to
- * be more than [maxLength] codepoints.
- *
- * @see maxLengthInChars
- */
-@ExperimentalFoundationApi
-@Stable
-fun InputTransformation.maxLengthInCodepoints(maxLength: Int): InputTransformation =
-    this.then(MaxLengthFilter(maxLength, inCodepoints = true))
+fun InputTransformation.maxLength(maxLength: Int): InputTransformation =
+    this.then(MaxLengthFilter(maxLength))
 
 // endregion
 // region Transformation implementations
@@ -177,6 +172,11 @@ private class FilterChain(
     override val keyboardOptions: KeyboardOptions?
         // TODO(b/295951492) Do proper merging.
         get() = second.keyboardOptions ?: first.keyboardOptions
+
+    override fun SemanticsPropertyReceiver.applySemantics() {
+        with(first) { applySemantics() }
+        with(second) { applySemantics() }
+    }
 
     override fun transformInput(
         originalValue: TextFieldCharSequence,
@@ -265,27 +265,27 @@ private data class AllCapsTransformation(private val locale: Locale) : InputTran
 // This is a very naive implementation for now, not intended to be production-ready.
 @OptIn(ExperimentalFoundationApi::class)
 private data class MaxLengthFilter(
-    private val maxLength: Int,
-    private val inCodepoints: Boolean
+    private val maxLength: Int
 ) : InputTransformation {
 
     init {
         require(maxLength >= 0) { "maxLength must be at least zero, was $maxLength" }
     }
 
+    override fun SemanticsPropertyReceiver.applySemantics() {
+        maxTextLength = maxLength
+    }
+
     override fun transformInput(
         originalValue: TextFieldCharSequence,
         valueWithChanges: TextFieldBuffer
     ) {
-        val newLength =
-            if (inCodepoints) valueWithChanges.codepointLength else valueWithChanges.length
-        if (newLength > maxLength) {
+        if (valueWithChanges.length > maxLength) {
             valueWithChanges.revertAllChanges()
         }
     }
 
     override fun toString(): String {
-        val name = if (inCodepoints) "maxLengthInCodepoints" else "maxLengthInChars"
-        return "InputTransformation.$name(maxLength=$maxLength)"
+        return "InputTransformation.maxLength($maxLength)"
     }
 }

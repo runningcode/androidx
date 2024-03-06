@@ -31,6 +31,7 @@ import androidx.compose.ui.text.input.ImeOptions
 import androidx.compose.ui.text.input.KeyboardType
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 
 /** Enable to print logs during debugging, see [logDebug]. */
@@ -43,7 +44,8 @@ internal actual suspend fun PlatformTextInputSession.platformSpecificTextInputSe
     layoutState: TextLayoutState,
     imeOptions: ImeOptions,
     receiveContentConfiguration: ReceiveContentConfiguration?,
-    onImeAction: ((ImeAction) -> Unit)?
+    onImeAction: ((ImeAction) -> Unit)?,
+    stylusHandwritingTrigger: MutableSharedFlow<Unit>?
 ): Nothing {
     platformSpecificTextInputSession(
         state = state,
@@ -51,7 +53,8 @@ internal actual suspend fun PlatformTextInputSession.platformSpecificTextInputSe
         imeOptions = imeOptions,
         receiveContentConfiguration = receiveContentConfiguration,
         onImeAction = onImeAction,
-        composeImm = ComposeInputMethodManager(view)
+        composeImm = ComposeInputMethodManager(view),
+        stylusHandwritingTrigger = stylusHandwritingTrigger,
     )
 }
 
@@ -62,28 +65,40 @@ internal suspend fun PlatformTextInputSession.platformSpecificTextInputSession(
     imeOptions: ImeOptions,
     receiveContentConfiguration: ReceiveContentConfiguration?,
     onImeAction: ((ImeAction) -> Unit)?,
-    composeImm: ComposeInputMethodManager
+    composeImm: ComposeInputMethodManager,
+    stylusHandwritingTrigger: MutableSharedFlow<Unit>?
 ): Nothing {
     coroutineScope {
         launch(start = CoroutineStart.UNDISPATCHED) {
-            state.collectImeNotifications { old, new ->
-                val needUpdateSelection =
-                    (old.selectionInChars != new.selectionInChars) ||
-                        old.compositionInChars != new.compositionInChars
-                if (needUpdateSelection) {
+            state.collectImeNotifications { oldValue, newValue, restartImeIfContentChanges ->
+                val oldSelection = oldValue.selection
+                val newSelection = newValue.selection
+                val oldComposition = oldValue.composition
+                val newComposition = newValue.composition
+
+                if ((oldSelection != newSelection) || oldComposition != newComposition) {
                     composeImm.updateSelection(
-                        selectionStart = new.selectionInChars.min,
-                        selectionEnd = new.selectionInChars.max,
-                        compositionStart = new.compositionInChars?.min ?: -1,
-                        compositionEnd = new.compositionInChars?.max ?: -1
+                        selectionStart = newSelection.min,
+                        selectionEnd = newSelection.max,
+                        compositionStart = oldComposition?.min ?: -1,
+                        compositionEnd = oldComposition?.max ?: -1
                     )
                 }
 
                 // No need to restart the IME if keyboard type is configured as Password. IME
                 // should not keep an internal input state if the content needs to be secured.
-                if (!old.contentEquals(new) && imeOptions.keyboardType != KeyboardType.Password) {
+                if (restartImeIfContentChanges &&
+                    !oldValue.contentEquals(newValue) &&
+                    imeOptions.keyboardType != KeyboardType.Password
+                ) {
                     composeImm.restartInput()
                 }
+            }
+        }
+
+        stylusHandwritingTrigger?.let {
+            launch(start = CoroutineStart.UNDISPATCHED) {
+                it.collect { composeImm.startStylusHandwriting() }
             }
         }
 
@@ -101,12 +116,9 @@ internal suspend fun PlatformTextInputSession.platformSpecificTextInputSession(
                 override val text: TextFieldCharSequence
                     get() = state.visualText
 
-                override fun requestEdit(
-                    notifyImeOfChanges: Boolean,
-                    block: EditingBuffer.() -> Unit
-                ) {
+                override fun requestEdit(block: EditingBuffer.() -> Unit) {
                     state.editUntransformedTextAsUser(
-                        notifyImeOfChanges = notifyImeOfChanges,
+                        restartImeIfContentChanges = false,
                         block = block
                     )
                 }
@@ -143,7 +155,7 @@ internal suspend fun PlatformTextInputSession.platformSpecificTextInputSession(
 
             outAttrs.update(
                 text = state.visualText,
-                selection = state.visualText.selectionInChars,
+                selection = state.visualText.selection,
                 imeOptions = imeOptions,
                 contentMimeTypes = contentMimeTypes
             )

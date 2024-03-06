@@ -16,23 +16,62 @@
 
 package androidx.room.integration.multiplatformtestapp.test
 
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
+import androidx.room.Delete
 import androidx.room.Entity
+import androidx.room.Insert
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
+import androidx.room.Transaction
+import androidx.room.Update
+import androidx.room.Upsert
 
 @Entity
 data class SampleEntity(
     @PrimaryKey
-    val pk: Long
+    val pk: Long,
+    @ColumnInfo(defaultValue = "0")
+    val data: Long
 )
 
 @Dao
 interface SampleDao {
+
+    @Query("INSERT INTO SampleEntity (pk) VALUES (:pk)")
+    suspend fun insertItem(pk: Long): Long
+
+    @Query("DELETE FROM SampleEntity WHERE pk = :pk")
+    suspend fun deleteItem(pk: Long): Int
+
     @Query("SELECT * FROM SampleEntity")
     suspend fun getSingleItem(): SampleEntity
+
+    @Query("SELECT * FROM SampleEntity")
+    suspend fun getItemList(): List<SampleEntity>
+
+    @Transaction
+    suspend fun deleteList(pks: List<Long>, withError: Boolean = false) {
+        require(!withError)
+        pks.forEach { deleteItem(it) }
+    }
+
+    @Query("SELECT * FROM SampleEntity")
+    suspend fun getSingleItemWithColumn(): SampleEntity
+
+    @Insert
+    suspend fun insert(entity: SampleEntity)
+
+    @Upsert
+    suspend fun upsert(entity: SampleEntity)
+
+    @Delete
+    suspend fun delete(entity: SampleEntity)
+
+    @Update
+    suspend fun update(entity: SampleEntity)
 }
 
 @Database(

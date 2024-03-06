@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
@@ -93,8 +94,9 @@ internal fun HorizontalMultiBrowseCarousel(
                     carouselMainAxisSize = availableSpace,
                     preferredItemSize = preferredItemSize.toPx(),
                     itemSpacing = itemSpacing.toPx(),
+                    itemCount = state.itemCountState.value.invoke(),
                     minSmallSize = minSmallSize.toPx(),
-                    maxSmallSize = maxSmallSize.toPx()
+                    maxSmallSize = maxSmallSize.toPx(),
                 )
             }
         },
@@ -182,6 +184,7 @@ internal fun Carousel(
     flingBehavior: TargetedFlingBehavior = PagerDefaults.flingBehavior(state = state.pagerState),
     content: @Composable CarouselScope.(itemIndex: Int) -> Unit
 ) {
+    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val pageSize = remember(keylineList) { CarouselPageSize(keylineList) }
 
     // TODO: Update beyond bounds numbers according to Strategy
@@ -212,7 +215,15 @@ internal fun Carousel(
             flingBehavior = flingBehavior,
             modifier = modifier
         ) { page ->
-            Box(modifier = Modifier.carouselItem(page, state, pageSize.strategy, scrollOffset)) {
+            Box(
+                modifier = Modifier.carouselItem(
+                    index = page,
+                    state = state,
+                    strategy = pageSize.strategy,
+                    scrollOffset = scrollOffset,
+                    isRtl = isRtl
+                )
+            ) {
                 carouselScope.content(page)
             }
         }
@@ -226,7 +237,15 @@ internal fun Carousel(
             flingBehavior = flingBehavior,
             modifier = modifier
         ) { page ->
-            Box(modifier = Modifier.carouselItem(page, state, pageSize.strategy, scrollOffset)) {
+            Box(
+                modifier = Modifier.carouselItem(
+                    index = page,
+                    state = state,
+                    strategy = pageSize.strategy,
+                    scrollOffset = scrollOffset,
+                    isRtl = isRtl
+                )
+            ) {
                 carouselScope.content(page)
             }
         }
@@ -279,13 +298,13 @@ internal value class CarouselAlignment private constructor(internal val value: I
  * @param state the carousel state
  * @param strategy the strategy used to mask and translate items in the carousel
  */
-@Suppress("IllegalExperimentalApiUsage")
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 internal fun Modifier.carouselItem(
     index: Int,
     state: CarouselState,
     strategy: Strategy,
     scrollOffset: Float,
+    isRtl: Boolean
 ): Modifier {
     val viewportSize = state.pagerState.layoutInfo.viewportSize
     val orientation = state.pagerState.layoutInfo.orientation
@@ -393,7 +412,7 @@ internal fun Modifier.carouselItem(
         if (isVertical) {
             translationY = translation
         } else {
-            translationX = translation
+            translationX = if (isRtl) -translation else translation
         }
     }
 }

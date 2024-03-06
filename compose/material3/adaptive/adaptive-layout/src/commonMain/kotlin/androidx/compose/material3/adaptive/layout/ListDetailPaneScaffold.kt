@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
@@ -30,28 +29,40 @@ import androidx.compose.ui.Modifier
  * A Material opinionated implementation of [ThreePaneScaffold] that will display the provided three
  * panes in a canonical list-detail layout.
  *
- * @param listPane the list pane of the scaffold. See [ListDetailPaneScaffoldRole.List].
+ * See usage samples at:
+ * @sample androidx.compose.material3.adaptive.samples.ListDetailPaneScaffoldSample
+ * @sample androidx.compose.material3.adaptive.samples.ListDetailPaneScaffoldSampleWithExtraPane
+ *
+ * @param directive The top-level directives about how the scaffold should arrange its panes.
+ * @param value The current adapted value of the scaffold, which indicates how each pane of
+ *        the scaffold is adapted.
+ * @param listPane the list pane of the scaffold, which is supposed to hold a list of item summaries
+ *        that can be selected from, for example, the inbox mail list of a mail app. See
+ *        [ListDetailPaneScaffoldRole.List].
+ * @param detailPane the detail pane of the scaffold, which is supposed to hold the detailed info
+ *        of a selected item, for example, the mail content currently being viewed. See
+ *        [ListDetailPaneScaffoldRole.Detail].
  * @param modifier [Modifier] of the scaffold layout.
- * @param scaffoldState the state of the scaffold, which provides the current scaffold directive
- *        and scaffold value.
+ * @param extraPane the extra pane of the scaffold, which is supposed to hold any supplementary info
+ *        besides the list and the detail panes, for example, a task list or a mini-calendar view of
+ *        a mail app. See [ListDetailPaneScaffoldRole.Extra].
  * @param windowInsets window insets that the scaffold will respect.
- * @param extraPane the list pane of the scaffold. See [ListDetailPaneScaffoldRole.Extra].
- * @param detailPane the list pane of the scaffold. See [ListDetailPaneScaffoldRole.Detail].
  */
 @ExperimentalMaterial3AdaptiveApi
 @Composable
 fun ListDetailPaneScaffold(
+    directive: PaneScaffoldDirective,
+    value: ThreePaneScaffoldValue,
     listPane: @Composable ThreePaneScaffoldScope.() -> Unit,
+    detailPane: @Composable ThreePaneScaffoldScope.() -> Unit,
     modifier: Modifier = Modifier,
-    scaffoldState: ThreePaneScaffoldState = calculateListDetailPaneScaffoldState(),
-    windowInsets: WindowInsets = ListDetailPaneScaffoldDefaults.windowInsets,
     extraPane: (@Composable ThreePaneScaffoldScope.() -> Unit)? = null,
-    detailPane: @Composable ThreePaneScaffoldScope.() -> Unit
+    windowInsets: WindowInsets = ListDetailPaneScaffoldDefaults.windowInsets,
 ) {
     ThreePaneScaffold(
         modifier = modifier.fillMaxSize(),
-        scaffoldDirective = scaffoldState.scaffoldDirective,
-        scaffoldValue = scaffoldState.scaffoldValue,
+        scaffoldDirective = directive,
+        scaffoldValue = value,
         paneOrder = ThreePaneScaffoldDefaults.ListDetailLayoutPaneOrder,
         windowInsets = windowInsets,
         secondaryPane = listPane,
@@ -59,71 +70,6 @@ fun ListDetailPaneScaffold(
         primaryPane = detailPane
     )
 }
-
-/**
- * This function calculates [ThreePaneScaffoldValue] based on the given [PaneScaffoldDirective],
- * [ThreePaneScaffoldAdaptStrategies], and the current pane destination of a
- * [ListDetailPaneScaffold].
- *
- * @param currentDestination the current destination item, which will be guaranteed to have the
- *        highest priority when deciding pane visibilities.
- * @param scaffoldDirective the layout directives that the associated [ListDetailPaneScaffold]
- *        needs to follow. The default value will be the calculation result from
- *        [calculateStandardPaneScaffoldDirective] with the current window configuration, and
- *        will be automatically updated when the window configuration changes.
- * @param adaptStrategies the [ThreePaneScaffoldAdaptStrategies] should be used by scaffold panes.
- */
-@ExperimentalMaterial3AdaptiveApi
-@Composable
-fun calculateListDetailPaneScaffoldState(
-    currentDestination: ThreePaneScaffoldDestinationItem<*> =
-        ThreePaneScaffoldDestinationItem(ListDetailPaneScaffoldRole.List, null),
-    scaffoldDirective: PaneScaffoldDirective =
-        calculateStandardPaneScaffoldDirective(currentWindowAdaptiveInfo()),
-    adaptStrategies: ThreePaneScaffoldAdaptStrategies =
-        ListDetailPaneScaffoldDefaults.adaptStrategies()
-): ThreePaneScaffoldState = ThreePaneScaffoldStateImpl(
-    scaffoldDirective,
-    calculateThreePaneScaffoldValue(
-        scaffoldDirective.maxHorizontalPartitions,
-        adaptStrategies,
-        currentDestination
-    )
-)
-
-/**
- * This function calculates [ThreePaneScaffoldValue] based on the given [PaneScaffoldDirective],
- * [ThreePaneScaffoldAdaptStrategies], and the pane destination history of a
- * [ListDetailPaneScaffold].
- *
- * @param destinationHistory The history of past destinations items. The last destination will
- *        have the highest priority, and the second last destination will have the second highest
- *        priority, and so forth until all panes have a priority assigned. Note that the last
- *        destination is supposed to be the last item of the provided list. When the history is
- *        empty or there are panes left unassigned, default priorities will be assigned to those
- *        panes in the order of Detail > List > Extra.
- * @param scaffoldDirective the layout directives that the associated [ListDetailPaneScaffold]
- *        needs to follow. The default value will be the calculation result from
- *        [calculateStandardPaneScaffoldDirective] with the current window configuration, and
- *        will be automatically updated when the window configuration changes.
- * @param adaptStrategies the [ThreePaneScaffoldAdaptStrategies] should be used by scaffold panes.
- */
-@ExperimentalMaterial3AdaptiveApi
-@Composable
-fun calculateListDetailPaneScaffoldState(
-    destinationHistory: List<ThreePaneScaffoldDestinationItem<*>>,
-    scaffoldDirective: PaneScaffoldDirective =
-        calculateStandardPaneScaffoldDirective(currentWindowAdaptiveInfo()),
-    adaptStrategies: ThreePaneScaffoldAdaptStrategies =
-        ListDetailPaneScaffoldDefaults.adaptStrategies()
-): ThreePaneScaffoldState = ThreePaneScaffoldStateImpl(
-    scaffoldDirective,
-    calculateThreePaneScaffoldValue(
-        scaffoldDirective.maxHorizontalPartitions,
-        adaptStrategies,
-        destinationHistory
-    )
-)
 
 /**
  * Provides default values of [ListDetailPaneScaffold].
@@ -157,28 +103,31 @@ object ListDetailPaneScaffoldDefaults {
 }
 
 /**
- * The set of the available pane roles of [ListDetailPaneScaffold]. Basically those values are
- * aliases of [ThreePaneScaffoldRole]. We suggest you to use the values defined here instead of
- * the raw [ThreePaneScaffoldRole] under the context of [ListDetailPaneScaffold] for better
- * code clarity.
+ * The set of the available pane roles of [ListDetailPaneScaffold]. Those roles map to their
+ * corresponding [ThreePaneScaffoldRole], which is a generic role definition across all types
+ * of three pane scaffolds. We suggest you to use the values defined here instead of the raw
+ * [ThreePaneScaffoldRole] under the context of [ListDetailPaneScaffold] for better code clarity.
  */
 @ExperimentalMaterial3AdaptiveApi
 object ListDetailPaneScaffoldRole {
     /**
-     * The list pane of [ListDetailPaneScaffold]. It is an alias of
+     * The list pane of [ListDetailPaneScaffold], which is supposed to hold a list of item summaries
+     * that can be selected from, for example, the inbox mail list of a mail app. It maps to
      * [ThreePaneScaffoldRole.Secondary].
      */
     val List = ThreePaneScaffoldRole.Secondary
 
     /**
-     * The detail pane of [ListDetailPaneScaffold]. It is an alias of
+     * The detail pane of [ListDetailPaneScaffold], which is supposed to hold the detailed info
+     * of a selected item, for example, the mail content currently being viewed. It maps to
      * [ThreePaneScaffoldRole.Primary].
      */
     val Detail = ThreePaneScaffoldRole.Primary
 
     /**
-     * The extra pane of [ListDetailPaneScaffold]. It is an alias of
-     * [ThreePaneScaffoldRole.Tertiary].
+     * The extra pane of [ListDetailPaneScaffold], which is supposed to hold any supplementary info
+     * besides the list and the detail panes, for example, a task list or a mini-calendar view of
+     * a mail app. It maps to [ThreePaneScaffoldRole.Tertiary].
      */
     val Extra = ThreePaneScaffoldRole.Tertiary
 }
